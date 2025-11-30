@@ -46,16 +46,15 @@ def init_db():
       description TEXT
     );
     """)
-    # DOCTORS (experience column included)
+        # DOCTORS (experience column included)
     db.execute("""
     CREATE TABLE IF NOT EXISTS doctors (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER UNIQUE NOT NULL,
-      department_id INTEGER,
-      bio TEXT,
-      experience TEXT,
-      FOREIGN KEY(user_id) REFERENCES users(id),
-      FOREIGN KEY(department_id) REFERENCES departments(id)
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER UNIQUE NOT NULL,
+        department_id INTEGER,
+        experience TEXT,
+        FOREIGN KEY(user_id) REFERENCES users(id),
+        FOREIGN KEY(department_id) REFERENCES departments(id)
     );
     """)
     # PATIENTS
@@ -273,9 +272,7 @@ def manage_doctors():
         phone = request.form["phone"].strip()
         password = request.form["password"]
         dept = request.form["department"].strip()
-        bio = request.form.get("bio","").strip()
-        experience = request.form.get("experience","").strip()
-        # ensure department
+        experience = request.form.get("experience","" ).strip()
         cur = db.execute("SELECT id FROM departments WHERE name=?", (dept,))
         row = cur.fetchone()
         if not row:
@@ -288,8 +285,8 @@ def manage_doctors():
             cur = db.execute("INSERT INTO users (username,password_hash,role,full_name,email,phone) VALUES (?,?,?,?,?,?)",
                              (username, ph, "doctor", full_name, email, phone))
             user_id = cur.lastrowid
-            db.execute("INSERT INTO doctors (user_id,department_id,bio,experience) VALUES (?,?,?,?)",
-                       (user_id, dept_id, bio or None, experience or None))
+            db.execute("INSERT INTO doctors (user_id,department_id,experience) VALUES (?,?,?)",
+                       (user_id, dept_id, experience or None))
             db.commit()
             flash("Doctor added.", "success")
         except sqlite3.IntegrityError:
@@ -306,22 +303,21 @@ def manage_doctors():
 def admin_edit_doctor(doctor_id):
     db = get_db()
     doctor = db.execute("""
-      SELECT d.id,d.user_id, u.username, u.full_name, u.email, u.phone, d.bio, d.experience, d.department_id
+      SELECT d.id,d.user_id, u.username, u.full_name, u.email, u.phone, d.experience, d.department_id
       FROM doctors d JOIN users u ON d.user_id = u.id WHERE d.id = ?
     """, (doctor_id,)).fetchone()
     if not doctor:
         flash("Doctor not found.", "danger"); return redirect(url_for("manage_doctors"))
     departments = db.execute("SELECT id,name FROM departments ORDER BY name").fetchall()
     if request.method=="POST":
-        full_name = request.form.get("full_name","").strip()
-        email = request.form.get("email","").strip()
-        phone = request.form.get("phone","").strip()
+        full_name = request.form.get("full_name"," ").strip()
+        email = request.form.get("email"," ").strip()
+        phone = request.form.get("phone"," ").strip()
         dept_id = request.form.get("department") or None
-        bio = request.form.get("bio","").strip()
-        experience = request.form.get("experience","").strip()
+        experience = request.form.get("experience", "").strip()
         if not full_name: flash("Name required.", "warning"); return redirect(url_for("admin_edit_doctor", doctor_id=doctor_id))
         db.execute("UPDATE users SET full_name=?, email=?, phone=? WHERE id=?", (full_name, email, phone, doctor["user_id"]))
-        db.execute("UPDATE doctors SET department_id=?, bio=?, experience=? WHERE id=?", (dept_id, bio or None, experience or None, doctor_id))
+        db.execute("UPDATE doctors SET department_id=?, experience=? WHERE id=?", (dept_id, experience or None, doctor_id))
         db.commit()
         flash("Doctor updated.", "success")
         return redirect(url_for("admin_view_doctor", doctor_id=doctor_id))
@@ -332,10 +328,12 @@ def admin_edit_doctor(doctor_id):
 def admin_view_doctor(doctor_id):
     db = get_db()
     doctor = db.execute("""
-      SELECT d.id,d.user_id,u.username,u.full_name,u.email,u.phone,d.bio,d.experience, dep.name AS department, u.is_active
-      FROM doctors d JOIN users u ON d.user_id = u.id LEFT JOIN departments dep ON d.department_id=dep.id WHERE d.id=?
-    """, (doctor_id,)).fetchone()
-    if not doctor: flash("Doctor not found.", "danger"); return redirect(url_for("manage_doctors"))
+            SELECT d.id,d.user_id,u.username,u.full_name,u.email,u.phone,d.experience, dep.name AS department, u.is_active
+            FROM doctors d JOIN users u ON d.user_id = u.id LEFT JOIN departments dep ON d.department_id=dep.id WHERE d.id=?
+        """, (doctor_id,)).fetchone()
+    if not doctor:
+        flash("Doctor not found.", "danger")
+        return redirect(url_for("manage_doctors"))
     appts = db.execute("""
       SELECT a.id,a.date,a.time,a.status, u_p.full_name patient_name
       FROM appointments a JOIN patients p ON a.patient_id=p.id JOIN users u_p ON p.user_id=u_p.id
@@ -399,8 +397,8 @@ def admin_view_patient(patient_id):
 def admin_departments():
     db=get_db()
     if request.method=="POST":
-        name=request.form.get("name","").strip()
-        desc=request.form.get("description","").strip()
+        name=request.form.get("name","" ).strip()
+        desc = request.form.get("description","" ).strip()
         if not name: flash("Name required.", "warning"); return redirect(url_for("admin_departments"))
         try:
             db.execute("INSERT INTO departments (name,description) VALUES (?,?)",(name,desc or None))
@@ -462,7 +460,7 @@ def doctor_view_patient_history(patient_id):
         LEFT JOIN treatments t ON t.appointment_id = a.id
         LEFT JOIN doctors d ON a.doctor_id = d.id
         LEFT JOIN users u ON d.user_id = u.id
-        WHERE a.patient_id = ?
+        WHERE a.patient_id = ? AND a.status != 'Cancelled'
         ORDER BY a.date DESC, a.time DESC
     """, (patient_id,)).fetchall()
 
@@ -495,7 +493,6 @@ def doctor_dashboard():
 
     return render_template("doctor_dashboard.html", appointments=appointments)
 
-# ------------------ Replace doctor_complete_appointment ------------------
 @app.route("/doctor/appointments/<int:appointment_id>/complete", methods=["GET", "POST"])
 @login_required(role="doctor")
 def doctor_complete_appointment(appointment_id):
@@ -525,7 +522,16 @@ def doctor_complete_appointment(appointment_id):
         treatment = db.execute("""
             SELECT diagnosis, prescription, notes FROM treatments WHERE appointment_id = ?
         """, (appointment_id,)).fetchone()
-        return render_template("doctor_complete.html", appt=appt, treatment=treatment)
+        # also get prior treatments for this patient (excluding current appointment)
+        past_treatments = db.execute("""
+            SELECT t.diagnosis, t.prescription, t.notes, a.date AS appt_date, a.time AS appt_time
+            FROM treatments t
+            JOIN appointments a ON t.appointment_id = a.id
+            WHERE a.patient_id = ? AND a.id != ?
+            ORDER BY a.date DESC, a.time DESC
+            LIMIT 20
+        """, (appt["patient_id"], appointment_id)).fetchall()
+        return render_template("doctor_complete.html", appt=appt, treatment=treatment, past_treatments=past_treatments)
 
     # POST: doctor is submitting diagnosis/prescription/notes to mark completed OR update existing treatment
     if appt["status"] == "Cancelled":
@@ -552,7 +558,8 @@ def doctor_complete_appointment(appointment_id):
         db.rollback()
         flash("Failed to complete appointment: " + str(e), "danger")
 
-    return redirect(url_for("doctor_dashboard"))
+    # After saving, redirect to the patient history view for this appointment
+    return redirect(url_for("doctor_view_patient_history", patient_id=appt["patient_id"]))
 
 # ------------------ Add doctor_cancel_appointment ------------------
 @app.route("/doctor/appointments/<int:appointment_id>/cancel", methods=["POST"])
@@ -906,10 +913,10 @@ def patient_dashboard():
       ORDER BY a.date,a.time
     """,(patient["id"],)).fetchall()
     past = db.execute("""
-      SELECT a.id,a.date,a.time,a.end_time,a.status,u.full_name AS doctor_name,t.diagnosis,t.prescription
-      FROM appointments a JOIN doctors d ON a.doctor_id=d.id JOIN users u ON d.user_id=u.id LEFT JOIN treatments t ON t.appointment_id=a.id
-      WHERE a.patient_id=? AND (datetime(a.date||' '||a.time) < datetime('now') OR a.status IN ('Completed','Cancelled'))
-      ORDER BY a.date DESC, a.time DESC
+            SELECT a.id,a.date,a.time,a.end_time,a.status,u.full_name AS doctor_name,t.diagnosis,t.prescription
+            FROM appointments a JOIN doctors d ON a.doctor_id=d.id JOIN users u ON d.user_id=u.id LEFT JOIN treatments t ON t.appointment_id=a.id
+            WHERE a.patient_id=? AND (datetime(a.date||' '||a.time) < datetime('now') OR a.status = 'Completed')
+            ORDER BY a.date DESC, a.time DESC
     """,(patient["id"],)).fetchall()
     doctors = db.execute("""
       SELECT d.id,u.full_name, dep.name AS department
@@ -926,22 +933,7 @@ def patient_view_doctor_availability(doctor_id):
     slots = db.execute("SELECT id,date,start_time,end_time FROM doctor_availability WHERE doctor_id=? AND is_booked=0 AND date>=date('now') ORDER BY date,start_time", (doctor_id,)).fetchall()
     return render_template("patient_doctor_slots.html", doctor=doctor, slots=slots)
 
-@app.route("/patient/doctor/<int:doctor_id>/availability_grid")
-@login_required(role="patient")
-def patient_view_doctor_availability_grid(doctor_id):
-    db=get_db()
-    doctor=db.execute("SELECT d.id,u.full_name,dep.name AS department FROM doctors d JOIN users u ON d.user_id = u.id LEFT JOIN departments dep ON d.department_id = dep.id WHERE d.id = ?", (doctor_id,)).fetchone()
-    if not doctor: flash("Doctor not found.", "danger"); return redirect(url_for("patient_dashboard"))
-    days=[]
-    today=date.today()
-    for i in range(7):
-        days.append((today+timedelta(days=i)).isoformat())
-    placeholders=",".join("?" for _ in days)
-    slots=db.execute(f"SELECT id,doctor_id,date,start_time,end_time,is_booked FROM doctor_availability WHERE doctor_id=? AND date IN ({placeholders}) ORDER BY date,start_time", (doctor_id, *days)).fetchall()
-    slots_by_date={d:[] for d in days}
-    for s in slots:
-        slots_by_date[s["date"]].append(s)
-    return render_template("patient_doctor_grid.html", doctor=doctor, days=days, slots_by_date=slots_by_date)
+
 
 @app.route("/patient/appointments/book/<int:slot_id>", methods=["GET","POST"])
 @login_required(role="patient")
@@ -972,15 +964,34 @@ def patient_book_slot(slot_id):
         except: pass
         flash("Booking failed: "+str(e), "danger"); return redirect(url_for("patient_dashboard"))
 
-@app.route("/patient/appointments/<int:appointment_id>/cancel")
+@app.route("/patient/appointments/<int:appointment_id>/cancel", methods=["POST"])
 @login_required(role="patient")
 def patient_cancel_appointment(appointment_id):
-    db=get_db()
-    appt=db.execute("SELECT id,doctor_id,date,time FROM appointments WHERE id=?", (appointment_id,)).fetchone()
-    if not appt: flash("Appointment not found.", "danger"); return redirect(url_for("patient_dashboard"))
-    db.execute("UPDATE appointments SET status='Cancelled' WHERE id=?", (appointment_id,))
-    db.execute("UPDATE doctor_availability SET is_booked=0, booked_by=NULL, booked_at=NULL WHERE doctor_id=? AND date=? AND start_time=?", (appt["doctor_id"], appt["date"], appt["time"]))
-    db.commit(); flash("Cancelled and slot released.", "info"); return redirect(url_for("patient_dashboard"))
+    db = get_db()
+    appt = db.execute(
+        "SELECT id, doctor_id, date, time, status FROM appointments WHERE id = ?",
+        (appointment_id,)
+    ).fetchone()
+
+    if not appt:
+        flash("Appointment not found.", "danger")
+        return redirect(url_for("patient_dashboard"))
+
+    # Only allow cancelling if currently Booked
+    if appt["status"] != "Booked":
+        flash(f"Cannot cancel an appointment with status '{appt['status']}'.", "warning")
+        return redirect(url_for("patient_dashboard"))
+
+    db.execute("UPDATE appointments SET status = 'Cancelled' WHERE id = ?", (appointment_id,))
+    db.execute("""
+        UPDATE doctor_availability
+        SET is_booked = 0, booked_by = NULL, booked_at = NULL
+        WHERE doctor_id = ? AND date = ? AND start_time = ?
+    """, (appt["doctor_id"], appt["date"], appt["time"]))
+    db.commit()
+    flash("Appointment cancelled and slot released.", "info")
+    return redirect(url_for("patient_dashboard"))
+
 
 @app.route("/patient/appointments/<int:appointment_id>/request_reschedule", methods=["GET", "POST"])
 @login_required(role="patient")
@@ -1133,7 +1144,7 @@ def search_doctors():
 @login_required(role="patient")
 def patient_view_doctor_profile(doctor_id):
     db=get_db()
-    doctor=db.execute("SELECT d.id,u.full_name,u.email,u.phone,d.bio,d.experience,dep.name AS department FROM doctors d JOIN users u ON d.user_id=u.id LEFT JOIN departments dep ON d.department_id=dep.id WHERE d.id=?", (doctor_id,)).fetchone()
+    doctor=db.execute("SELECT d.id,u.full_name,u.email,u.phone,d.experience,dep.name AS department FROM doctors d JOIN users u ON d.user_id=u.id LEFT JOIN departments dep ON d.department_id=dep.id WHERE d.id=?", (doctor_id,)).fetchone()
     if not doctor: flash("Doctor not found.", "danger"); return redirect(url_for("patient_dashboard"))
     return render_template("patient_view_doctor.html", doctor=doctor)
 

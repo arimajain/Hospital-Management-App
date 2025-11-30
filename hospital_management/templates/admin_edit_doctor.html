@@ -14,7 +14,6 @@
       </select>
     </div>
   </div>
-  <div class="mb-3"><label class="form-label">Bio</label><textarea name="bio" class="form-control" rows="2">{{ doctor.bio }}</textarea></div>
   <div class="mb-3"><label class="form-label">Experience</label><input name="experience" class="form-control" value="{{ doctor.experience or '' }}"></div>
   <button class="btn btn-success">Save</button>
   <a class="btn btn-link" href="{{ url_for('admin_view_doctor', doctor_id=doctor.id) }}">Cancel</a>

@@ -2,15 +2,26 @@
 {% block content %}
 <h2>Search doctors</h2>
 <form class="row mb-3" method="get" action="{{ url_for('search_doctors') }}">
-  <div class="col-md-8"><input name="q" class="form-control" placeholder="Search by name, dept or username" value="{{ q }}"></div>
-  <div class="col-md-4"><button class="btn btn-primary">Search</button></div>
+  <div class="col-md-8">
+    <input name="q" class="form-control" placeholder="Search by name, department or username" value="{{ q }}">
+  </div>
+  <div class="col-md-4">
+    <button class="btn btn-primary">Search</button>
+  </div>
 </form>
+
 {% if doctors %}
   <ul class="list-group">
     {% for d in doctors %}
       <li class="list-group-item d-flex justify-content-between align-items-center">
-        <div><strong>{{ d.full_name }}</strong><br><small>{{ d.department or '' }}</small></div>
-        <div><a class="btn btn-sm btn-outline-primary" href="{{ url_for('patient_view_doctor_profile', doctor_id=d.id) }}">View</a> <a class="btn btn-sm btn-success" href="{{ url_for('patient_view_doctor_availability', doctor_id=d.id) }}">Slots</a></div>
+        <div>
+          <strong>{{ d.full_name }}</strong><br>
+          <small class="text-muted">{{ d.department or '' }}</small>
+        </div>
+        <div>
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('patient_view_doctor_profile', doctor_id=d.id) }}">View</a>
+          <a class="btn btn-sm btn-success" href="{{ url_for('patient_view_doctor_availability', doctor_id=d.id) }}">Slots</a>
+        </div>
       </li>
     {% endfor %}
   </ul>

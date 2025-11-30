@@ -1,10 +1,21 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Dr. {{ doctor.full_name }}</h2>
-<p><strong>Department:</strong> {{ doctor.department or '—' }}</p>
-<p><strong>Experience:</strong> {{ doctor.experience or '—' }}</p>
-<p><strong>Email:</strong> {{ doctor.email or '—' }}</p>
-<p><strong>Phone:</strong> {{ doctor.phone or '—' }}</p>
-<p><strong>Bio:</strong> {{ doctor.bio or '—' }}</p>
-<a class="btn btn-primary" href="{{ url_for('patient_view_doctor_availability', doctor_id=doctor.id) }}">View slots</a>
+<div class="d-flex justify-content-between align-items-start mb-3">
+  <div>
+    <h2>Dr. {{ doctor.full_name }}</h2>
+    <div class="text-muted">{{ doctor.department or 'General' }}</div>
+  </div>
+  <div>
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('patient_view_doctor_availability', doctor_id=doctor.id) }}">Slots</a>
+  </div>
+</div>
+
+<div class="card mb-3 shadow-sm">
+  <div class="card-body">
+    <p><strong>Experience:</strong> {{ doctor.experience or '—' }}</p>
+    <p><strong>Email:</strong> {{ doctor.email or '—' }}</p>
+    <p><strong>Phone:</strong> {{ doctor.phone or '—' }}</p>
+    <p><strong>Bio:</strong> {{ doctor.bio or '—' }}</p>
+  </div>
+</div>
 {% endblock %}

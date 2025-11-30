@@ -1,11 +1,57 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Available slots for Dr. {{ doctor.full_name }}</h2>
-<table class="table"><thead><tr><th>Date</th><th>Start</th><th>End</th><th>Action</th></tr></thead><tbody>
-  {% for s in slots %}
-    <tr><td>{{ s.date }}</td><td>{{ s.start_time }}</td><td>{{ s.end_time }}</td><td><a class="btn btn-sm btn-success" href="{{ url_for('patient_book_slot', slot_id=s.id) }}">Book</a></td></tr>
-  {% else %}
-    <tr><td colspan="4" class="text-center">No available slots</td></tr>
-  {% endfor %}
-</tbody></table>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h2 class="mb-0">Slots for Dr. {{ doctor.full_name }}</h2>
+    <small class="text-muted">{{ doctor.department or 'General' }}</small>
+  </div>
+  <div>
+    <a class="btn btn-outline-secondary" href="{{ url_for('patient_dashboard') }}">Back to Dashboard</a>
+    
+  </div>
+</div>
+
+{% set grouped = {} %}
+{# build grouped mapping by date #}
+{% for s in slots %}
+  {% set _ = grouped.setdefault(s.date, []).append(s) %}
+{% endfor %}
+
+{% if slots %}
+  <div class="accordion" id="slotsAccordion">
+    {% for date, day_slots in grouped.items() | sort %}
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="head-{{ loop.index }}">
+          <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ loop.index }}" aria-expanded="{{ 'true' if loop.first else 'false' }}" aria-controls="collapse-{{ loop.index }}">
+            <div class="me-3 fw-semibold">{{ date }}</div>
+            <div class="text-muted small">{{ day_slots|length }} slot{{ 's' if day_slots|length > 1 }}</div>
+          </button>
+        </h2>
+        <div id="collapse-{{ loop.index }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" aria-labelledby="head-{{ loop.index }}" data-bs-parent="#slotsAccordion">
+          <div class="accordion-body">
+            <div class="list-group">
+              {% for s in day_slots %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>{{ s.start_time }}</strong> — {{ s.end_time }}
+                    <div class="small text-muted">Dr. {{ doctor.full_name }}</div>
+                  </div>
+                  <div>
+                    {% if s.is_booked %}
+                      <span class="badge bg-secondary">Booked</span>
+                    {% else %}
+                      <a class="btn btn-sm btn-success" href="{{ url_for('patient_book_slot', slot_id=s.id) }}">Book</a>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="alert alert-info">No available slots found for this doctor.</div>
+{% endif %}
 {% endblock %}

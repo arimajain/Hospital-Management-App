@@ -32,9 +32,7 @@
     </form>
   </div>
 
-  <form method="post" action="{{ url_for('doctor_cancel_appointment', appointment_id=appt.id) }}" onsubmit="return confirm('Cancel appointment?');">
-    <button type="submit" class="btn btn-danger mb-3">Cancel this appointment</button>
-  </form>
+  <!-- Cancel button removed from edit screen per request (use dashboard to cancel) -->
 {% else %}
   <div class="alert alert-info">No actions allowed for this appointment (status: {{ appt.status }}).</div>
 {% endif %}
