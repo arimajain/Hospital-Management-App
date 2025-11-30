@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Appointments</h2>
+<table class="table">
+  <thead><tr><th>#</th><th>Date</th><th>Time</th><th>End</th><th>Status</th><th>Patient</th><th>Phone</th><th>Doctor</th><th>Dept</th></tr></thead>
+  <tbody>
+    {% for r in rows %}
+      <tr><td>{{ r.id }}</td><td>{{ r.date }}</td><td>{{ r.time }}</td><td>{{ r.end_time }}</td><td>{{ r.status }}</td><td>{{ r.patient_name }}</td><td>{{ r.patient_phone }}</td><td>{{ r.doctor_name }}</td><td>{{ r.department }}</td></tr>
+    {% else %}
+      <tr><td colspan="9" class="text-center">No appointments</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

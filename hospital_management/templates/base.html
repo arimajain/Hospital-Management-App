@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ title if title else "Hospital" }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      body { padding-top: 20px; }
+      .site-header { border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+    </style>
+  </head>
+  <body>
+    <div class="container site-header">
+      <div class="d-flex justify-content-between align-items-center">
+        <h3 class="mb-0"><a href="{{ url_for('index') }}" class="text-decoration-none text-dark">Hospital</a></h3>
+        <div>
+          {% if session.get('user_id') %}
+            <span class="me-3">Hi, {{ session.get('full_name') or '' }}</span>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-secondary btn-sm">Logout</a>
+          {% else %}
+            <a href="{{ url_for('login') }}" class="btn btn-primary btn-sm">Login</a>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if session.get('role') == 'admin' %}
+        <nav class="mt-2">
+          <a href="{{ url_for('admin_dashboard') }}" class="me-3">Admin Dashboard</a>
+          <a href="{{ url_for('manage_doctors') }}" class="me-3">Manage Doctors</a>
+          <a href="{{ url_for('admin_departments') }}" class="me-3">Departments</a>
+        </nav>
+      {% elif session.get('role') == 'doctor' %}
+        <nav class="mt-2">
+          <a href="{{ url_for('doctor_dashboard') }}" class="me-3">Doctor Dashboard</a>
+          <a href="{{ url_for('doctor_availability') }}" class="me-3">My Availability</a>
+          <a href="{{ url_for('doctor_assigned_patients') }}" class="me-3">Assigned Patients</a>
+        </nav>
+      {% elif session.get('role') == 'patient' %}
+        <nav class="mt-2">
+          <a href="{{ url_for('patient_dashboard') }}" class="me-3">Patient Dashboard</a>
+          <a href="{{ url_for('search_doctors') }}" class="me-3">Search Doctors</a>
+          <a href="{{ url_for('patient_profile') }}" class="me-3">My Profile</a>
+        </nav>
+      {% endif %}
+    </div>
+
+    <main class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, msg in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+              {{ msg }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

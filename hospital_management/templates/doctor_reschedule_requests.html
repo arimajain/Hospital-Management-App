@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Reschedule requests</h2>
+<table class="table table-hover"><thead><tr><th>#</th><th>Patient</th><th>Old slot</th><th>Requested slot</th><th>When</th><th>Status</th><th>Actions</th></tr></thead>
+<tbody>
+  {% for r in requests %}
+    <tr><td>{{ r.id }}</td><td>{{ r.patient_name }}</td><td>{{ r.old_date }} {{ r.old_time }}</td><td>{{ r.new_date }} {{ r.new_time }} - {{ r.new_end }}</td><td>{{ r.created_at }}</td><td>{{ r.status }}</td>
+      <td>{% if r.status=='Pending' %}<a class="btn btn-sm btn-success" href="{{ url_for('doctor_respond_reschedule', request_id=r.id, action='approve') }}">Approve</a> <a class="btn btn-sm btn-danger" href="{{ url_for('doctor_respond_reschedule', request_id=r.id, action='reject') }}">Reject</a>{% else %}<span class="text-muted">No actions</span>{% endif %}</td></tr>
+  {% else %}
+    <tr><td colspan="7" class="text-center">No reschedule requests</td></tr>
+  {% endfor %}
+</tbody></table>
+{% endblock %}

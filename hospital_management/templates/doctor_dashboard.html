@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="mb-4">
+  <h1>Doctor dashboard</h1>
+  <div class="mt-2">
+    <a class="btn btn-outline-primary me-2" href="{{ url_for('doctor_availability') }}">My Availability</a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('doctor_assigned_patients') }}">Assigned Patients</a>
+  </div>
+</div>
+
+<h3>Upcoming & recent appointments</h3>
+<table class="table">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Patient</th>
+      <th>Date</th>
+      <th>Time</th>
+      <th>Status</th>
+      <th style="width:280px">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for a in appointments %}
+      <tr>
+        <td>{{ a.id }}</td>
+        <td>
+          {{ a.patient_name }}<br>
+          <small class="text-muted">{{ a.patient_phone }}</small>
+        </td>
+        <td>{{ a.date }}</td>
+        <td>{{ a.time }}{% if a.end_time %} - {{ a.end_time }}{% endif %}</td>
+        <td>
+          {% if a.status == 'Booked' %}
+            <span class="badge bg-primary">{{ a.status }}</span>
+          {% elif a.status == 'Completed' %}
+            <span class="badge bg-success">{{ a.status }}</span>
+          {% else %}
+            <span class="badge bg-secondary">{{ a.status }}</span>
+          {% endif %}
+        </td>
+        <td>
+          <!-- History -->
+          <a class="btn btn-sm btn-outline-info me-2"
+             href="{{ url_for('doctor_view_patient_history', patient_id=a.patient_id) }}">History</a>
+
+          <!-- Complete: only when currently Booked -->
+          {% if a.status == 'Booked' %}
+            <a class="btn btn-sm btn-success me-2" href="{{ url_for('doctor_complete_appointment', appointment_id=a.id) }}">Complete</a>
+          {% else %}
+            <button class="btn btn-sm btn-success me-2" disabled>Complete</button>
+          {% endif %}
+
+          <!-- Cancel: only when currently Booked -->
+          <form method="post" action="{{ url_for('doctor_cancel_appointment', appointment_id=a.id) }}" style="display:inline-block" onsubmit="return confirm('Cancel this appointment?');">
+            {% if a.status == 'Booked' %}
+              <button class="btn btn-sm btn-warning" type="submit">Cancel</button>
+            {% else %}
+              <button class="btn btn-sm btn-warning" type="button" disabled>Cancel</button>
+            {% endif %}
+          </form>
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="6" class="text-muted">No appointments found.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

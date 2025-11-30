@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Admin dashboard</h2>
+<div class="row mb-4">
+  <div class="col-md-4"><div class="card p-3"><h5>Total doctors</h5><p class="h3">{{ total_doctors }}</p></div></div>
+  <div class="col-md-4"><div class="card p-3"><h5>Total patients</h5><p class="h3">{{ total_patients }}</p></div></div>
+  <div class="col-md-4"><div class="card p-3"><h5>Total appointments</h5><p class="h3">{{ total_appointments }}</p></div></div>
+</div>
+
+<h4>Upcoming appointments</h4>
+<table class="table table-striped">
+  <thead><tr><th>#</th><th>Patient</th><th>Doctor</th><th>Date</th><th>Time</th><th>Status</th></tr></thead>
+  <tbody>
+    {% for a in upcoming %}
+      <tr><td>{{ a.id }}</td><td>{{ a.patient_name }}</td><td>{{ a.doctor_name }}</td><td>{{ a.date }}</td><td>{{ a.time }}</td><td>{{ a.status }}</td></tr>
+    {% else %}
+      <tr><td colspan="6" class="text-center">No upcoming bookings</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

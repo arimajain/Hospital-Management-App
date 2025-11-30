@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Edit doctor</h2>
+<form method="post" action="{{ url_for('admin_edit_doctor', doctor_id=doctor.id) }}">
+  <div class="row">
+    <div class="mb-3 col-md-6"><label class="form-label">Full name</label><input name="full_name" class="form-control" value="{{ doctor.full_name }}" required></div>
+    <div class="mb-3 col-md-6"><label class="form-label">Email</label><input name="email" class="form-control" value="{{ doctor.email }}"></div>
+  </div>
+  <div class="row">
+    <div class="mb-3 col-md-6"><label class="form-label">Phone</label><input name="phone" class="form-control" value="{{ doctor.phone }}"></div>
+    <div class="mb-3 col-md-6"><label class="form-label">Department</label>
+      <select name="department" class="form-select"><option value="">-- None --</option>
+        {% for dep in departments %}<option value="{{ dep.id }}" {% if dep.id==doctor.department_id %}selected{% endif %}>{{ dep.name }}</option>{% endfor %}
+      </select>
+    </div>
+  </div>
+  <div class="mb-3"><label class="form-label">Bio</label><textarea name="bio" class="form-control" rows="2">{{ doctor.bio }}</textarea></div>
+  <div class="mb-3"><label class="form-label">Experience</label><input name="experience" class="form-control" value="{{ doctor.experience or '' }}"></div>
+  <button class="btn btn-success">Save</button>
+  <a class="btn btn-link" href="{{ url_for('admin_view_doctor', doctor_id=doctor.id) }}">Cancel</a>
+</form>
+{% endblock %}

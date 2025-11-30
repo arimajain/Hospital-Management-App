@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Patients</h2>
+<form class="row mb-3" method="get" action="{{ url_for('admin_list_patients') }}">
+  <div class="col-auto"><input class="form-control" name="q" placeholder="Search patients" value="{{ q }}"></div>
+  <div class="col-auto"><button class="btn btn-outline-primary">Search</button></div>
+</form>
+<table class="table">
+  <thead><tr><th>#</th><th>Username</th><th>Full name</th><th>Email</th><th>Phone</th><th>Active</th><th>Actions</th></tr></thead>
+  <tbody>
+    {% for p in patients %}
+      <tr><td>{{ p.id }}</td><td>{{ p.username }}</td><td>{{ p.full_name }}</td><td>{{ p.email }}</td><td>{{ p.phone }}</td><td>{{ 'Yes' if p.is_active else 'No' }}</td>
+        <td>
+          <a class="btn btn-sm btn-primary" href="{{ url_for('admin_view_patient', patient_id=p.id) }}">View</a>
+          <form method="post" action="{{ url_for('admin_deactivate_user', user_id=p.user_id) }}" style="display:inline">
+            <button class="btn btn-sm btn-warning">{{ 'Deactivate' if p.is_active else 'Activate' }}</button>
+          </form>
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="7" class="text-center">No patients found</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+

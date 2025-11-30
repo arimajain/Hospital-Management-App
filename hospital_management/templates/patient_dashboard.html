@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>My dashboard</h2>
+<h4>Upcoming</h4>
+<table class="table"><thead><tr><th>#</th><th>Doctor</th><th>Date</th><th>Time</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+  {% for a in upcoming %}
+    <tr><td>{{ a.id }}</td><td>{{ a.doctor_name }}</td><td>{{ a.date }}</td><td>{{ a.time }}</td><td>{{ a.status }}</td>
+      <td>
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('patient_view_doctor_profile', doctor_id=a.doctor_id) }}">Doctor</a>
+        <a class="btn btn-sm btn-danger" href="{{ url_for('patient_cancel_appointment', appointment_id=a.id) }}" onclick="return confirm('Cancel appointment?')">Cancel</a>
+        <a class="btn btn-sm btn-secondary" href="{{ url_for('patient_request_reschedule', appointment_id=a.id) }}">reschedule</a>
+      </td></tr>
+  {% else %}
+    <tr><td colspan="6" class="text-center">No upcoming appointments</td></tr>
+  {% endfor %}
+</tbody></table>
+
+<h4>Past</h4>
+<table class="table"><thead><tr><th>#</th><th>Doctor</th><th>Date</th><th>Time</th><th>Status</th><th>Diagnosis / Prescription</th></tr></thead><tbody>
+  {% for p in past %}
+    <tr><td>{{ p.id }}</td><td>{{ p.doctor_name }}</td><td>{{ p.date }}</td><td>{{ p.time }}</td><td>{{ p.status }}</td><td><strong>{{ p.diagnosis or '-' }}</strong><br>{{ p.prescription or '-' }}</td></tr>
+  {% else %}
+    <tr><td colspan="6" class="text-center">No past appointments</td></tr>
+  {% endfor %}
+</tbody></table>
+
+<h4>Doctors</h4>
+<ul class="list-group">
+  {% for d in doctors %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      <div><strong>{{ d.full_name }}</strong><br><small>{{ d.department or '' }}</small></div>
+      <div><a class="btn btn-sm btn-outline-primary" href="{{ url_for('patient_view_doctor_availability', doctor_id=d.id) }}">View slots</a> <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('patient_view_doctor_profile', doctor_id=d.id) }}">Profile</a></div>
+    </li>
+  {% else %}
+    <li class="list-group-item">No doctors available</li>
+  {% endfor %}
+</ul>
+{% endblock %}

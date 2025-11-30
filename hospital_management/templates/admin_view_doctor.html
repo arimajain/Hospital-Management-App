@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Doctor: {{ doctor.full_name }}</h2>
+<p><strong>Department:</strong> {{ doctor.department or '-' }}</p>
+<p><strong>Experience:</strong> {{ doctor.experience or '-' }}</p>
+<p><strong>Email:</strong> {{ doctor.email }}</p>
+<p><strong>Phone:</strong> {{ doctor.phone }}</p>
+<p><strong>Bio:</strong> {{ doctor.bio or '-' }}</p>
+<h4 class="mt-4">Recent appointments</h4>
+<table class="table">
+  <thead><tr><th>#</th><th>Date</th><th>Time</th><th>Patient</th><th>Status</th></tr></thead>
+  <tbody>
+    {% for a in appts %}
+      <tr><td>{{ a.id }}</td><td>{{ a.date }}</td><td>{{ a.time }}</td><td>{{ a.patient_name }}</td><td>{{ a.status }}</td></tr>
+    {% else %}
+      <tr><td colspan="5" class="text-center">No recent appointments</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

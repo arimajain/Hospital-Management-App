@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Available slots for Dr. {{ doctor.full_name }}</h2>
+<table class="table"><thead><tr><th>Date</th><th>Start</th><th>End</th><th>Action</th></tr></thead><tbody>
+  {% for s in slots %}
+    <tr><td>{{ s.date }}</td><td>{{ s.start_time }}</td><td>{{ s.end_time }}</td><td><a class="btn btn-sm btn-success" href="{{ url_for('patient_book_slot', slot_id=s.id) }}">Book</a></td></tr>
+  {% else %}
+    <tr><td colspan="4" class="text-center">No available slots</td></tr>
+  {% endfor %}
+</tbody></table>
+{% endblock %}

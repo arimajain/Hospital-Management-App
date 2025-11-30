@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <h3 class="mb-4">Login</h3>
+    <form method="post" action="{{ url_for('login') }}">
+      <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <input id="username" name="username" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input id="password" name="password" type="password" class="form-control" required>
+      </div>
+      <button class="btn btn-primary">Login</button>
+      <a class="btn btn-link" href="{{ url_for('register_patient') }}">Register as patient</a>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+

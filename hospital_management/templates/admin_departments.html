@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Departments</h2>
+<form method="post" class="row g-2 mb-3">
+  <div class="col-md-5"><input name="name" class="form-control" placeholder="Name"></div>
+  <div class="col-md-5"><input name="description" class="form-control" placeholder="Description"></div>
+  <div class="col-md-2"><button class="btn btn-primary">Add</button></div>
+</form>
+<table class="table">
+  <thead><tr><th>Name</th><th>Description</th><th>Actions</th></tr></thead>
+  <tbody>
+    {% for d in depts %}
+      <tr><td>{{ d.name }}</td><td>{{ d.description }}</td><td><a class="btn btn-sm btn-secondary" href="{{ url_for('admin_edit_department', dept_id=d.id) }}">Edit</a>
+        <form method="post" action="{{ url_for('admin_delete_department', dept_id=d.id) }}" style="display:inline"><button class="btn btn-sm btn-danger">Delete</button></form></td></tr>
+    {% else %}
+      <tr><td colspan="3">No departments</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

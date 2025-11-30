@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Patient: {{ patient.full_name }}</h2>
+<p><strong>Username:</strong> {{ patient.username }}</p>
+<p><strong>Email:</strong> {{ patient.email }}</p>
+<p><strong>Phone:</strong> {{ patient.phone }}</p>
+<p><strong>Address:</strong> {{ patient.address or '-' }}</p>
+<p><strong>Blood group:</strong> {{ patient.blood_group or '-' }}</p>
+<p><strong>Emergency contact:</strong> {{ patient.emergency_contact or '-' }}</p>
+
+<h4 class="mt-4">Appointments</h4>
+<table class="table">
+  <thead><tr><th>#</th><th>Date</th><th>Time</th><th>Doctor</th><th>Status</th></tr></thead>
+  <tbody>
+    {% for a in appointments %}
+      <tr><td>{{ a.id }}</td><td>{{ a.date }}</td><td>{{ a.time }}</td><td>{{ a.doctor_name }}</td><td>{{ a.status }}</td></tr>
+    {% else %}
+      <tr><td colspan="5" class="text-center">No appointments</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h4 class="mt-4">Treatments</h4>
+<table class="table">
+  <thead><tr><th>#</th><th>Date</th><th>Doctor</th><th>Diagnosis</th><th>Prescription</th></tr></thead>
+  <tbody>
+    {% for t in treatments %}
+      <tr><td>{{ t.id }}</td><td>{{ t.appt_date }} {{ t.appt_time }}</td><td>{{ t.doctor_name }}</td><td>{{ t.diagnosis or '-' }}</td><td>{{ t.prescription or '-' }}</td></tr>
+    {% else %}
+      <tr><td colspan="5" class="text-center">No treatments</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+

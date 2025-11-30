@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Manage Doctors</h2>
+<button class="btn btn-primary mb-3" data-bs-toggle="collapse" data-bs-target="#addForm">Add Doctor</button>
+<div id="addForm" class="collapse mb-4">
+  <div class="card card-body">
+    <form method="post" action="{{ url_for('manage_doctors') }}">
+      <div class="row">
+        <div class="mb-3 col-md-4"><label class="form-label">Username</label><input name="username" class="form-control" required></div>
+        <div class="mb-3 col-md-4"><label class="form-label">Full name</label><input name="full_name" class="form-control" required></div>
+        <div class="mb-3 col-md-4"><label class="form-label">Email</label><input name="email" type="email" class="form-control"></div>
+      </div>
+      <div class="row">
+        <div class="mb-3 col-md-4"><label class="form-label">Phone</label><input name="phone" class="form-control"></div>
+        <div class="mb-3 col-md-4"><label class="form-label">Password</label><input name="password" type="password" class="form-control" required></div>
+        <div class="mb-3 col-md-4"><label class="form-label">Department</label><input name="department" class="form-control" required></div>
+      </div>
+      <div class="mb-3"><label class="form-label">Bio</label><textarea name="bio" class="form-control" rows="2"></textarea></div>
+      <div class="mb-3"><label class="form-label">Experience</label><input name="experience" class="form-control" placeholder="e.g., 5 years, Cardiology"></div>
+      <button class="btn btn-success">Create doctor</button>
+    </form>
+  </div>
+</div>
+
+<table class="table table-hover">
+  <thead><tr><th>Name</th><th>Username</th><th>Email</th><th>Phone</th><th>Department</th><th>Experience</th><th>Actions</th></tr></thead>
+  <tbody>
+    {% for d in doctors %}
+      <tr>
+        <td>{{ d.full_name }}</td><td>{{ d.username }}</td><td>{{ d.email }}</td><td>{{ d.phone }}</td><td>{{ d.department or '-' }}</td><td>{{ d.experience or '-' }}</td>
+        <td>
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_view_doctor', doctor_id=d.id) }}">View</a>
+          <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin_edit_doctor', doctor_id=d.id) }}">Edit</a>
+          <form method="post" action="{{ url_for('admin_delete_doctor', doctor_id=d.id) }}" style="display:inline" onsubmit="return confirm('Remove doctor?')">
+            <button class="btn btn-sm btn-danger">Remove</button>
+          </form>
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="7" class="text-center">No doctors yet</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+

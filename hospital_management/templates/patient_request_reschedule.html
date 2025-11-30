@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+  <div class="col-md-8 offset-md-2">
+    <h2>Reschedule Appointment</h2>
+
+    <div class="card mb-3 p-3">
+      <h5 class="mb-0">Appointment</h5>
+      <div class="small text-muted">ID: {{ appt.id }}</div>
+      <p class="mb-0">
+        <strong>Date:</strong> {{ appt.date }} &nbsp;
+        <strong>Time:</strong> {{ appt.time }} - {{ appt.end_time or '' }}<br>
+        <strong>Status:</strong> {{ appt.status }}
+      </p>
+    </div>
+
+    <div class="alert alert-info">
+      <strong>Note:</strong> You can reschedule immediately. If the selected slot is still available it will be booked right away — doctor approval is not required.
+    </div>
+
+    {% if slots %}
+      <form method="post" action="{{ url_for('patient_request_reschedule', appointment_id=appt.id) }}">
+        <div class="list-group mb-3">
+          {% for s in slots %}
+            <label class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <input type="radio" name="requested_slot_id" value="{{ s.id }}" required>
+                <strong>{{ s.date }}</strong> — {{ s.start_time }} &rarr; {{ s.end_time }}
+              </div>
+              <div class="text-end">
+                <small class="text-muted">Available</small>
+              </div>
+            </label>
+          {% endfor %}
+        </div>
+
+        <div class="d-flex justify-content-between">
+          <a href="{{ url_for('patient_dashboard') }}" class="btn btn-secondary">Cancel</a>
+          <button class="btn btn-primary" type="submit">Reschedule Now</button>
+        </div>
+      </form>
+    {% else %}
+      <div class="alert alert-warning">
+        No available slots found for this doctor. Try again later or contact the clinic.
+      </div>
+      <div class="text-end">
+        <a href="{{ url_for('patient_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
