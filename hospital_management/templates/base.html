@@ -23,26 +23,6 @@
           {% endif %}
         </div>
       </div>
-
-      <!-- {% if session.get('role') == 'admin' %}
-        <nav class="mt-2">
-          <a href="{{ url_for('admin_dashboard') }}" class="me-3">Admin Dashboard</a>
-          <a href="{{ url_for('manage_doctors') }}" class="me-3">Manage Doctors</a>
-          <a href="{{ url_for('admin_departments') }}" class="me-3">Departments</a>
-        </nav>
-      {% elif session.get('role') == 'doctor' %}
-        <nav class="mt-2">
-          <a href="{{ url_for('doctor_dashboard') }}" class="me-3">Doctor Dashboard</a>
-          <a href="{{ url_for('doctor_availability') }}" class="me-3">My Availability</a>
-          <a href="{{ url_for('doctor_assigned_patients') }}" class="me-3">Assigned Patients</a>
-        </nav>
-      {% elif session.get('role') == 'patient' %}
-        <nav class="mt-2">
-          <a href="{{ url_for('patient_dashboard') }}" class="me-3">Patient Dashboard</a>
-          <a href="{{ url_for('search_doctors') }}" class="me-3">Search Doctors</a>
-          <a href="{{ url_for('patient_profile') }}" class="me-3">My Profile</a>
-        </nav>
-      {% endif %} -->
     </div>
 
     <main class="container">

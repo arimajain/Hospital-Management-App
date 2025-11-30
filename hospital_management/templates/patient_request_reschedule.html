@@ -1,50 +1,109 @@
 {% extends "base.html" %}
+
 {% block content %}
+<style>
+    /* Custom Radio Button Styling */
+    .slot-selector {
+        display: none; /* hide standard radio */
+    }
+    .slot-label {
+        cursor: pointer;
+        min-width: 110px;
+        text-align: center;
+        padding: 0.6rem 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        background-color: #fff;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+    .slot-label:hover {
+        background-color: #f8f9fa;
+        border-color: #adb5bd;
+    }
+    /* When radio is checked */
+    .slot-selector:checked + .slot-label {
+        background-color: #e8f5e9;
+        border-color: #198754;
+        color: #198754;
+        font-weight: bold;
+        box-shadow: 0 0 0 1px #198754;
+    }
+    .accordion-button:not(.collapsed) {
+        background-color: #f1f3f5;
+        color: #212529;
+    }
+</style>
+
 <div class="row">
   <div class="col-md-8 offset-md-2">
-    <h2>Reschedule Appointment</h2>
+    <h2 class="mb-4">Reschedule Appointment</h2>
 
-    <div class="card mb-3 p-3 shadow-sm">
-      <h5 class="mb-0">Appointment</h5>
-      <div class="small text-muted">ID: {{ appt.id }}</div>
-      <p class="mb-0">
-        <strong>Date:</strong> {{ appt.date }} &nbsp;
-        <strong>Time:</strong> {{ appt.time }} - {{ appt.end_time or '' }}<br>
-        <strong>Status:</strong> {{ appt.status }}
-      </p>
+    <div class="card mb-4 border-0 shadow-sm bg-light">
+      <div class="card-body d-flex justify-content-between align-items-center">
+        <div>
+            <small class="text-muted text-uppercase fw-bold">Current Booking</small>
+            <div class="fs-5 fw-bold text-dark mt-1">{{ appt.date }} &bull; {{ appt.time }}</div>
+            <div class="small text-muted">ID: #{{ appt.id }}</div>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-secondary">{{ appt.status }}</span>
+        </div>
+      </div>
     </div>
 
-    <div class="alert alert-info">
-      <strong>Note:</strong> You can reschedule immediately. If the selected slot is still available it will be booked right away — doctor approval is not required.
+    <div class="alert alert-info mb-4">
+      <strong>Note:</strong> Select a new date and time below. Your old slot will be released immediately upon confirmation.
     </div>
 
     {% if slots %}
+      {# Group slots by date first #}
+      {% set grouped = {} %}
+      {% for s in slots %}
+        {% set _ = grouped.setdefault(s.date, []).append(s) %}
+      {% endfor %}
+
       <form method="post" action="{{ url_for('patient_request_reschedule', appointment_id=appt.id) }}">
-        <div class="list-group mb-3">
-          {% for s in slots %}
-            <label class="list-group-item d-flex justify-content-between align-items-center">
-              <div>
-                <input type="radio" name="requested_slot_id" value="{{ s.id }}" required>
-                <strong>{{ s.date }}</strong> — {{ s.start_time }} &rarr; {{ s.end_time }}
+        
+        <div class="accordion mb-4" id="rescheduleAccordion" style="border-radius: 12px; overflow: hidden; border: 1px solid #dee2e6;">
+          {% for date, day_slots in grouped.items() | sort %}
+            <div class="accordion-item border-0 border-bottom">
+              <h2 class="accordion-header" id="heading{{ loop.index }}">
+                <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" aria-expanded="{{ 'true' if loop.first else 'false' }}">
+                  <span class="fw-bold">{{ date }}</span>
+                </button>
+              </h2>
+              <div id="collapse{{ loop.index }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" data-bs-parent="#rescheduleAccordion">
+                <div class="accordion-body bg-white">
+                  <div class="d-flex flex-wrap gap-2">
+                    {% for s in day_slots %}
+                      <div class="position-relative">
+                        <input type="radio" name="requested_slot_id" value="{{ s.id }}" id="slot-{{ s.id }}" class="slot-selector" required>
+                        <label for="slot-{{ s.id }}" class="slot-label">
+                          {{ s.start_time }}
+                        </label>
+                      </div>
+                    {% endfor %}
+                  </div>
+                </div>
               </div>
-              <div class="text-end">
-                <small class="text-muted">Available</small>
-              </div>
-            </label>
+            </div>
           {% endfor %}
         </div>
 
-        <div class="d-flex justify-content-between">
-          <a href="{{ url_for('patient_dashboard') }}" class="btn btn-secondary">Cancel</a>
-          <button class="btn btn-primary" type="submit">Reschedule Now</button>
+        <div class="d-flex justify-content-between align-items-center mt-4">
+          <a href="{{ url_for('patient_dashboard') }}" class="btn btn-link text-muted text-decoration-none">Cancel</a>
+          <button class="btn btn-primary px-4 py-2" type="submit">Confirm Reschedule</button>
         </div>
       </form>
+
     {% else %}
-      <div class="alert alert-warning">
-        No available slots found for this doctor. Try again later or contact the clinic.
-      </div>
-      <div class="text-end">
-        <a href="{{ url_for('patient_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+      <div class="card p-4 text-center border-warning bg-warning bg-opacity-10">
+        <h5 class="text-warning-emphasis">No slots available</h5>
+        <p class="mb-3">There are no other available slots for this doctor at the moment.</p>
+        <div>
+            <a href="{{ url_for('patient_dashboard') }}" class="btn btn-outline-dark">Back to Dashboard</a>
+        </div>
       </div>
     {% endif %}
   </div>

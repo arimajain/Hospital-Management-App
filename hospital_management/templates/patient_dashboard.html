@@ -1,103 +1,183 @@
 {% extends "base.html" %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h1 class="mb-0">Patient dashboard</h1>
+<style>
+    /* Minimal Dashboard Styles */
+    .dashboard-section-title {
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    /* Simple Card */
+    .card {
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        box-shadow: none; /* Removed shadow for flat, minimal look */
+    }
+
+    /* Date Box */
+    .date-badge {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        width: 60px;
+        height: 60px;
+        flex-shrink: 0;
+        margin-right: 1rem;
+        color: #212529;
+    }
+    .date-badge .month { font-size: 0.7rem; text-transform: uppercase; font-weight: bold; color: #6c757d; }
+    .date-badge .day { font-size: 1.2rem; font-weight: 700; line-height: 1; }
+
+    /* Status Pills */
+    .status-pill {
+        border-radius: 50px;
+        padding: 0.25em 0.8em;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    .status-booked { background-color: #e3f2fd; color: #0d47a1; }
+    .status-completed { background-color: #e8f5e9; color: #1b5e20; }
+    .status-cancelled { background-color: #ffebee; color: #b71c1c; }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
   <div>
-    <a class="btn btn-outline-primary me-2" href="{{ url_for('search_doctors') }}">Search Doctors</a>
-    <a class="btn btn-outline-secondary" href="{{ url_for('patient_profile') }}">My Profile</a>
+    <h2 class="fw-bold mb-1">Hello, {{ session.get('full_name').split()[0] }}</h2>
+    <p class="text-muted mb-0">Your Health Dashboard</p>
+  </div>
+  <div>
+    <a class="btn btn-outline-secondary" href="{{ url_for('patient_profile') }}">Edit Profile</a>
   </div>
 </div>
 
-<!-- Doctors -->
-<section class="mb-4">
-  <h5 class="mb-3">Available doctors</h5>
-  <div class="row">
-    {% if doctors %}
-      {% for doc in doctors %}
-        <div class="col-sm-6 col-md-4 mb-3">
-          <div class="card h-100">
-            <div class="card-body d-flex flex-column">
-              <h5 class="card-title mb-1">{{ doc.full_name }}</h5>
-              <div class="card-subtitle mb-2 text-muted">{{ doc.department or 'General' }}</div>
-              <div class="mt-auto d-flex gap-2">
-                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('patient_view_doctor_profile', doctor_id=doc.id) }}">Profile</a>
-                <a class="btn btn-sm btn-success" href="{{ url_for('patient_view_doctor_availability', doctor_id=doc.id) }}">Slots</a>
-              </div>
-            </div>
-          </div>
+<div class="mb-5">
+    <form action="{{ url_for('patient_dashboard') }}" method="get" class="mb-3">
+        <label class="form-label fw-bold">Find a Doctor</label>
+        <div class="input-group input-group-lg">
+            <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search by name or department..." autocomplete="off">
+            <button class="btn btn-primary px-4" type="submit">Search</button>
         </div>
-      {% endfor %}
-    {% else %}
-      <div class="col-12 text-muted">No doctors available yet.</div>
-    {% endif %}
-  </div>
-</section>
+    </form>
 
-<!-- Upcoming -->
-<section class="mb-4">
-  <h5 class="mb-3">Upcoming appointments</h5>
-  <div class="row">
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+        <span class="text-muted small fw-bold text-uppercase me-2">Browse by Specialization:</span>
+        {% for dept in departments %}
+            <a href="{{ url_for('patient_dashboard', q=dept.name) }}" class="btn btn-sm btn-outline-secondary rounded-pill">
+                {{ dept.name }}
+            </a>
+        {% endfor %}
+        <div class="ms-auto">
+            <a href="{{ url_for('patient_all_doctors') }}" class="text-decoration-none small">View all doctors &rarr;</a>
+        </div>
+    </div>
+
+    {% if q %}
+      <div class="card mt-2 shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <small class="text-muted">Results for "{{ q }}"</small>
+          <a href="{{ url_for('patient_dashboard') }}" class="btn-close btn-sm" aria-label="Close"></a>
+        </div>
+        <div class="list-group list-group-flush">
+          {% if search_results %}
+             {% for d in search_results %}
+               <a href="{{ url_for('patient_view_doctor_profile', doctor_id=d.id) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                 <div>
+                   <span class="fw-bold text-dark">{{ d.full_name }}</span>
+                   <span class="text-muted small ms-2">({{ d.department or 'General' }})</span>
+                 </div>
+                 <small class="text-primary">View</small>
+               </a>
+             {% endfor %}
+          {% else %}
+             <div class="list-group-item text-center text-muted py-3">No doctors found.</div>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+</div>
+
+<section class="mb-5">
+  <h4 class="dashboard-section-title">Upcoming Appointments</h4>
+  <div class="row g-3">
     {% if upcoming %}
       {% for a in upcoming %}
-        <div class="col-md-6 mb-3">
-          <div class="card">
-            <div class="card-body d-flex justify-content-between align-items-center">
+        <div class="col-md-6">
+          <div class="card p-3 h-100">
+            <div class="d-flex align-items-center mb-3">
+              <div class="date-badge">
+                 <span class="month">DATE</span>
+                 <span class="day">{{ a.date.split('-')[2] }}</span>
+              </div>
               <div>
-                <div class="fw-bold">{{ a.doctor_name }}</div>
-                <div class="small text-muted">{{ a.date }} • {{ a.time }}{% if a.end_time %} - {{ a.end_time }}{% endif %}</div>
-                <div class="mt-1"><span class="badge bg-info text-dark">{{ a.status }}</span></div>
+                <h5 class="mb-1 fw-bold">
+                    <a href="{{ url_for('patient_view_doctor_profile', doctor_id=a.doctor_id) }}" class="text-dark text-decoration-none">
+                        {{ a.doctor_name }}
+                    </a>
+                </h5>
+                <div class="small text-muted">{{ a.time }}{% if a.end_time %} - {{ a.end_time }}{% endif %}</div>
+                <span class="status-pill status-booked mt-1 d-inline-block">{{ a.status }}</span>
               </div>
-              <div class="text-end">
-                <a class="btn btn-sm btn-outline-info mb-2 d-block" href="{{ url_for('patient_view_doctor_profile', doctor_id=a.doctor_id) }}">Doctor</a>
-                <a class="btn btn-sm btn-outline-primary mb-2 d-block" href="{{ url_for('patient_request_reschedule', appointment_id=a.id) }}">Reschedule</a>
-                <form method="post" action="{{ url_for('patient_cancel_appointment', appointment_id=a.id) }}" onsubmit="return confirm('Cancel this appointment?');">
-                  <button class="btn btn-sm btn-warning">Cancel</button>
+            </div>
+            
+            <div class="d-flex gap-2 mt-auto">
+                <a class="btn btn-sm btn-outline-primary flex-fill" href="{{ url_for('patient_request_reschedule', appointment_id=a.id) }}">Reschedule</a>
+                <form method="post" action="{{ url_for('patient_cancel_appointment', appointment_id=a.id) }}" class="flex-fill" onsubmit="return confirm('Cancel this appointment?');">
+                    <button class="btn btn-sm btn-outline-danger w-100">Cancel</button>
                 </form>
-              </div>
             </div>
           </div>
         </div>
       {% endfor %}
     {% else %}
-      <div class="col-12 text-muted">No upcoming appointments.</div>
+      <div class="col-12">
+          <div class="card p-4 text-center bg-light border-0">
+              <p class="text-muted mb-0">No upcoming appointments.</p>
+          </div>
+      </div>
     {% endif %}
   </div>
 </section>
 
-<!-- Past -->
 <section>
-  <h5 class="mb-3">Past appointments & treatments</h5>
-  <div class="row">
-    {% if past %}
-      {% for a in past %}
-        <div class="col-md-6 mb-3">
-          <div class="card">
-            <div class="card-body">
-              <div class="d-flex justify-content-between">
+  <h4 class="dashboard-section-title">Past History</h4>
+  <div class="card">
+      <div class="list-group list-group-flush">
+        {% if past %}
+          {% for a in past %}
+            <div class="list-group-item p-3">
+              <div class="d-flex justify-content-between align-items-start mb-2">
                 <div>
-                  <div class="fw-bold">{{ a.doctor_name }}</div>
-                  <div class="small text-muted">{{ a.date }} • {{ a.time }}</div>
+                  <h6 class="mb-0 fw-bold">{{ a.doctor_name }}</h6>
+                  <small class="text-muted">{{ a.date }} • {{ a.time }}</small>
                 </div>
-                <div class="text-end">
-                  <div><span class="badge bg-secondary">{{ a.status }}</span></div>
-                </div>
+                <span class="status-pill {% if a.status == 'Completed' %}status-completed{% else %}status-cancelled{% endif %}">
+                    {{ a.status }}
+                </span>
               </div>
-
-              <hr class="my-2">
-
+              
               {% if a.diagnosis or a.prescription %}
-                <div><strong>Diagnosis:</strong> {{ a.diagnosis or '-' }}</div>
-                <div class="mt-1"><strong>Rx:</strong> {{ a.prescription or '-' }}</div>
-              {% else %}
-                <div class="text-muted">No treatment recorded</div>
+                <div class="bg-light p-2 rounded small text-muted">
+                    {% if a.diagnosis %}<div><strong>Diagnosis:</strong> {{ a.diagnosis }}</div>{% endif %}
+                    {% if a.prescription %}<div><strong>Prescription:</strong> {{ a.prescription }}</div>{% endif %}
+                </div>
               {% endif %}
             </div>
-          </div>
-        </div>
-      {% endfor %}
-    {% else %}
-      <div class="col-12 text-muted">No past appointments.</div>
-    {% endif %}
+          {% endfor %}
+        {% else %}
+          <div class="p-4 text-center text-muted">No history found.</div>
+        {% endif %}
+      </div>
   </div>
 </section>
+
 {% endblock %}

@@ -906,23 +906,39 @@ def patient_dashboard():
     user_id=session["user_id"]
     patient = db.execute("SELECT * FROM patients WHERE user_id=?", (user_id,)).fetchone()
     if not patient: flash("Profile missing.", "danger"); return redirect(url_for("logout"))
+    
+    # Upcoming
     upcoming = db.execute("""
       SELECT a.id,a.date,a.time,a.end_time,a.status,u.full_name AS doctor_name, d.id AS doctor_id
       FROM appointments a JOIN doctors d ON a.doctor_id=d.id JOIN users u ON d.user_id=u.id
       WHERE a.patient_id=? AND datetime(a.date||' '||a.time) >= datetime('now') AND a.status='Booked'
       ORDER BY a.date,a.time
     """,(patient["id"],)).fetchall()
+    
+    # Past
     past = db.execute("""
             SELECT a.id,a.date,a.time,a.end_time,a.status,u.full_name AS doctor_name,t.diagnosis,t.prescription
             FROM appointments a JOIN doctors d ON a.doctor_id=d.id JOIN users u ON d.user_id=u.id LEFT JOIN treatments t ON t.appointment_id=a.id
             WHERE a.patient_id=? AND (datetime(a.date||' '||a.time) < datetime('now') OR a.status = 'Completed')
             ORDER BY a.date DESC, a.time DESC
     """,(patient["id"],)).fetchall()
-    doctors = db.execute("""
-      SELECT d.id,u.full_name, dep.name AS department
-      FROM doctors d JOIN users u ON d.user_id=u.id LEFT JOIN departments dep ON d.department_id=dep.id ORDER BY dep.name,u.full_name
-    """).fetchall()
-    return render_template("patient_dashboard.html", upcoming=upcoming, past=past, doctors=doctors)
+    
+    # Departments (for "Browse by Specialization")
+    departments = db.execute("SELECT name FROM departments ORDER BY name").fetchall()
+
+    # --- Search Logic ---
+    q = request.args.get("q", "").strip()
+    search_results = []
+    if q:
+        like = f"%{q}%"
+        search_results = db.execute("""
+          SELECT d.id, u.full_name, dep.name AS department, u.username
+          FROM doctors d JOIN users u ON d.user_id=u.id LEFT JOIN departments dep ON d.department_id=dep.id
+          WHERE u.full_name LIKE ? OR dep.name LIKE ? OR u.username LIKE ?
+          ORDER BY u.full_name
+        """, (like, like, like)).fetchall()
+    
+    return render_template("patient_dashboard.html", upcoming=upcoming, past=past, departments=departments, search_results=search_results, q=q)
 
 @app.route("/patient/doctor/<int:doctor_id>/availability")
 @login_required(role="patient")
@@ -1124,21 +1140,22 @@ def patient_profile():
         db.commit(); session["full_name"]=full_name; flash("Profile updated.", "success"); return redirect(url_for("patient_profile"))
     return render_template("patient_profile.html", user=user, patient=patient)
 
+@app.route("/patient/doctors/all")
+@login_required(role="patient")
+def patient_all_doctors():
+    db = get_db()
+    doctors = db.execute("""
+      SELECT d.id,u.full_name, dep.name AS department
+      FROM doctors d JOIN users u ON d.user_id=u.id LEFT JOIN departments dep ON d.department_id=dep.id ORDER BY dep.name,u.full_name
+    """).fetchall()
+    return render_template("patient_all_doctors.html", doctors=doctors)
+
+# --- RE-ADDED THIS ROUTE TO FIX CRASHES ---
 @app.route("/search/doctors")
 @login_required()
 def search_doctors():
-    q=request.args.get("q","").strip()
-    db=get_db()
-    doctors=[]
-    if q:
-        like=f"%{q}%"
-        doctors=db.execute("""
-          SELECT d.id,u.full_name, dep.name AS department, u.username
-          FROM doctors d JOIN users u ON d.user_id=u.id LEFT JOIN departments dep ON d.department_id=dep.id
-          WHERE u.full_name LIKE ? OR dep.name LIKE ? OR u.username LIKE ?
-          ORDER BY u.full_name
-        """, (like,like,like)).fetchall()
-    return render_template("search_doctors.html", doctors=doctors, q=q)
+    # Redirects old search requests to the main dashboard
+    return redirect(url_for('patient_dashboard'))
 
 @app.route("/doctor/<int:doctor_id>/profile")
 @login_required(role="patient")

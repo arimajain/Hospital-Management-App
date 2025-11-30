@@ -1,13 +1,32 @@
 {% extends "base.html" %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
+<style>
+  /* Custom Slot Styles */
+  .slot-btn {
+    min-width: 100px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .slot-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  .accordion-button:not(.collapsed) {
+    background-color: #f8f9fa;
+    color: #0d6efd;
+    box-shadow: none;
+  }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
   <div>
-    <h2 class="mb-0">Slots for Dr. {{ doctor.full_name }}</h2>
-    <small class="text-muted">{{ doctor.department or 'General' }}</small>
+    <h2 class="mb-1">Dr. {{ doctor.full_name }}</h2>
+    <div class="text-muted">{{ doctor.department or 'General' }} &bull; Available Slots</div>
   </div>
   <div>
     <a class="btn btn-outline-secondary" href="{{ url_for('patient_dashboard') }}">Back to Dashboard</a>
-    
   </div>
 </div>
 
@@ -18,40 +37,47 @@
 {% endfor %}
 
 {% if slots %}
-  <div class="accordion" id="slotsAccordion">
+  <div class="accordion shadow-sm" id="slotsAccordion" style="border-radius: 12px; overflow: hidden;">
     {% for date, day_slots in grouped.items() | sort %}
-      <div class="accordion-item">
+      <div class="accordion-item border-0 border-bottom">
         <h2 class="accordion-header" id="head-{{ loop.index }}">
           <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ loop.index }}" aria-expanded="{{ 'true' if loop.first else 'false' }}" aria-controls="collapse-{{ loop.index }}">
-            <div class="me-3 fw-semibold">{{ date }}</div>
-            <div class="text-muted small">{{ day_slots|length }} slot{{ 's' if day_slots|length > 1 }}</div>
+            <div class="d-flex align-items-baseline">
+                <span class="fw-bold fs-5 me-3">{{ date }}</span>
+                <span class="badge bg-light text-secondary rounded-pill fw-normal border">{{ day_slots|length }} slots</span>
+            </div>
           </button>
         </h2>
         <div id="collapse-{{ loop.index }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" aria-labelledby="head-{{ loop.index }}" data-bs-parent="#slotsAccordion">
-          <div class="accordion-body">
-            <div class="list-group">
-              {% for s in day_slots %}
-                <div class="list-group-item d-flex justify-content-between align-items-center">
-                  <div>
-                    <strong>{{ s.start_time }}</strong> — {{ s.end_time }}
-                    <div class="small text-muted">Dr. {{ doctor.full_name }}</div>
-                  </div>
-                  <div>
+          <div class="accordion-body bg-light bg-opacity-10">
+            {% if day_slots %}
+                <div class="d-flex flex-wrap gap-2">
+                  {% for s in day_slots %}
                     {% if s.is_booked %}
-                      <span class="badge bg-secondary">Booked</span>
+                        <button class="btn btn-sm btn-light border text-muted slot-btn" disabled>
+                            <del>{{ s.start_time }}</del>
+                        </button>
                     {% else %}
-                      <a class="btn btn-sm btn-success" href="{{ url_for('patient_book_slot', slot_id=s.id) }}">Book</a>
+                        <a href="{{ url_for('patient_book_slot', slot_id=s.id) }}" class="btn btn-outline-primary slot-btn py-2">
+                            {{ s.start_time }}
+                        </a>
                     {% endif %}
-                  </div>
+                  {% endfor %}
                 </div>
-              {% endfor %}
-            </div>
+            {% else %}
+                <p class="text-muted mb-0">No available slots for this day.</p>
+            {% endif %}
           </div>
         </div>
       </div>
     {% endfor %}
   </div>
 {% else %}
-  <div class="alert alert-info">No available slots found for this doctor.</div>
+  <div class="alert alert-warning d-flex align-items-center" role="alert">
+    <div>
+        <h5 class="alert-heading">No slots available</h5>
+        <p class="mb-0">Please check back later or contact the clinic directly.</p>
+    </div>
+  </div>
 {% endif %}
 {% endblock %}
