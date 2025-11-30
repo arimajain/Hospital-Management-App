@@ -1,21 +1,130 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h2>Admin dashboard</h2>
-<div class="row mb-4">
-  <div class="col-md-4"><div class="card p-3"><h5>Total doctors</h5><p class="h3">{{ total_doctors }}</p></div></div>
-  <div class="col-md-4"><div class="card p-3"><h5>Total patients</h5><p class="h3">{{ total_patients }}</p></div></div>
-  <div class="col-md-4"><div class="card p-3"><h5>Total appointments</h5><p class="h3">{{ total_appointments }}</p></div></div>
+<div class="mb-5">
+  <h2 class="fw-bold mb-1 text-dark">Admin Dashboard</h2>
+  <p class="text-muted small">System overview</p>
 </div>
 
-<h4>Upcoming appointments</h4>
-<table class="table table-striped">
-  <thead><tr><th>#</th><th>Patient</th><th>Doctor</th><th>Date</th><th>Time</th><th>Status</th></tr></thead>
-  <tbody>
-    {% for a in upcoming %}
-      <tr><td>{{ a.id }}</td><td>{{ a.patient_name }}</td><td>{{ a.doctor_name }}</td><td>{{ a.date }}</td><td>{{ a.time }}</td><td>{{ a.status }}</td></tr>
-    {% else %}
-      <tr><td colspan="6" class="text-center">No upcoming bookings</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+<div class="row g-3 mb-5">
+  <div class="col-md-4">
+    <div class="border rounded p-3 bg-white h-100 d-flex flex-column justify-content-between">
+      <h6 class="text-uppercase text-muted fw-bold small mb-2">Doctors</h6>
+      <div class="fs-2 fw-bold text-dark">{{ total_doctors }}</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="border rounded p-3 bg-white h-100 d-flex flex-column justify-content-between">
+      <h6 class="text-uppercase text-muted fw-bold small mb-2">Patients</h6>
+      <div class="fs-2 fw-bold text-dark">{{ total_patients }}</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="border rounded p-3 bg-white h-100 d-flex flex-column justify-content-between">
+      <h6 class="text-uppercase text-muted fw-bold small mb-2">Upcoming Appointments</h6>
+      <div class="fs-2 fw-bold text-dark">{{ total_upcoming }}</div>
+    </div>
+  </div>
+</div>
+
+<h6 class="fw-bold mb-3 text-secondary text-uppercase small">Management</h6>
+<div class="row g-3 mb-5">
+  <div class="col-md-4">
+    <a href="{{ url_for('manage_doctors') }}" class="d-block text-decoration-none bg-light border rounded p-3 text-center text-dark fw-bold">
+      Doctors
+      <div class="small fw-normal text-muted mt-1">Add or remove</div>
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="{{ url_for('admin_list_patients') }}" class="d-block text-decoration-none bg-light border rounded p-3 text-center text-dark fw-bold">
+      Patients
+      <div class="small fw-normal text-muted mt-1">View records</div>
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="{{ url_for('admin_departments') }}" class="d-block text-decoration-none bg-light border rounded p-3 text-center text-dark fw-bold">
+      Departments
+      <div class="small fw-normal text-muted mt-1">Manage specialties</div>
+    </a>
+  </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h6 class="fw-bold text-secondary text-uppercase small mb-0">Upcoming Activity</h6>
+    <a href="{{ url_for('admin_appointments', filter='upcoming') }}" class="text-decoration-none small">View All &rarr;</a>
+</div>
+
+<div class="border rounded overflow-hidden">
+  <table class="table mb-0">
+    <thead class="bg-light">
+      <tr>
+        <th class="ps-4 py-3 text-uppercase text-muted small fw-bold border-bottom">Date & Time</th>
+        <th class="py-3 text-uppercase text-muted small fw-bold border-bottom">Doctor</th>
+        <th class="py-3 text-uppercase text-muted small fw-bold border-bottom">Patient</th>
+        <th class="py-3 text-uppercase text-muted small fw-bold border-bottom">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in upcoming %}
+        <tr>
+          <td class="ps-4 py-3 align-middle">
+            <div class="fw-bold text-dark">{{ a.date }}</div>
+            <small class="text-muted">{{ a.time }}</small>
+          </td>
+          <td class="align-middle">{{ a.doctor_name }}</td>
+          <td class="align-middle">{{ a.patient_name }}</td>
+          <td class="align-middle">
+            {% if a.status == 'Booked' %}
+              <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 rounded-pill fw-normal">Booked</span>
+            {% else %}
+              <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2 py-1 rounded-pill fw-normal">{{ a.status }}</span>
+            {% endif %}
+          </td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="4" class="text-center py-4 text-muted small">No upcoming bookings.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3 mt-5">
+    <h6 class="fw-bold text-secondary text-uppercase small mb-0">Recent Past Activity</h6>
+    <a href="{{ url_for('admin_appointments', filter='past') }}" class="text-decoration-none small">View All &rarr;</a>
+</div>
+
+<div class="border rounded overflow-hidden">
+  <table class="table mb-0">
+    <thead class="bg-light">
+      <tr>
+        <th class="ps-4 py-3 text-uppercase text-muted small fw-bold border-bottom">Date & Time</th>
+        <th class="py-3 text-uppercase text-muted small fw-bold border-bottom">Doctor</th>
+        <th class="py-3 text-uppercase text-muted small fw-bold border-bottom">Patient</th>
+        <th class="py-3 text-uppercase text-muted small fw-bold border-bottom">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in past %}
+        <tr>
+          <td class="ps-4 py-3 align-middle">
+            <div class="fw-bold text-dark">{{ a.date }}</div>
+            <small class="text-muted">{{ a.time }}</small>
+          </td>
+          <td class="align-middle">{{ a.doctor_name }}</td>
+          <td class="align-middle">{{ a.patient_name }}</td>
+          <td class="align-middle">
+            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill fw-normal">Completed</span>
+          </td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="4" class="text-center py-4 text-muted small">No recent activity.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
 {% endblock %}

@@ -1,76 +1,68 @@
 {% extends "base.html" %}
-{% block content %}
 
-<div class="mb-4">
-  <h1>Doctor dashboard</h1>
-  <div class="mt-2">
-    <a class="btn btn-outline-primary me-2" href="{{ url_for('doctor_availability') }}">My Availability</a>
-    <a class="btn btn-outline-secondary" href="{{ url_for('doctor_assigned_patients') }}">Assigned Patients</a>
+{% block content %}
+<div class="mb-5">
+  <h2 class="fw-bold mb-1">Hello, Dr. {{ session.get('full_name').split()[2] }}</h2>
+  <p class="text-muted small mb-0">Today's Schedule & Overview</p>
+</div>
+
+<div class="mb-5">
+  <a href="{{ url_for('doctor_availability') }}" class="d-block text-decoration-none bg-white border rounded p-3 d-flex justify-content-between align-items-center">
+    <div>
+      <h6 class="fw-bold text-dark mb-1">Manage Availability</h6>
+      <div class="small text-muted">Update your visiting hours and time slots</div>
+    </div>
+    <div class="text-muted">&rarr;</div>
+  </a>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h6 class="fw-bold text-uppercase text-secondary small mb-0">Upcoming Appointments</h6>
+</div>
+
+<div class="border rounded overflow-hidden mb-5">
+  <div class="list-group list-group-flush">
+    {% if active_appts %}
+      {% for a in active_appts %}
+        <div class="list-group-item p-3 d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-bold text-dark mb-1">{{ a.patient_name }}</div>
+            <div class="small text-muted">{{ a.date }} at {{ a.time }}</div>
+          </div>
+          <div class="d-flex gap-2">
+             <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('doctor_view_patient_history', patient_id=a.patient_id) }}">History</a>
+             <a class="btn btn-sm btn-success" href="{{ url_for('doctor_complete_appointment', appointment_id=a.id) }}">Complete</a>
+             <form method="post" action="{{ url_for('doctor_cancel_appointment', appointment_id=a.id) }}" onsubmit="return confirm('Cancel?');">
+                <button class="btn btn-sm btn-outline-danger">✕</button>
+             </form>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="p-4 text-center text-muted small">No active appointments.</div>
+    {% endif %}
   </div>
 </div>
 
-<h3>Upcoming & recent appointments</h3>
-<table class="table">
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>Patient</th>
-      <th>Date</th>
-      <th>Time</th>
-      <th>Status</th>
-      <th style="width:280px">Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for a in appointments %}
-      <tr>
-        <td>{{ loop.index }}</td>
-        <td>
-          {{ a.patient_name }}<br>
-          <small class="text-muted">{{ a.patient_phone }}</small>
-        </td>
-        <td>{{ a.date }}</td>
-        <td>{{ a.time }}{% if a.end_time %} - {{ a.end_time }}{% endif %}</td>
-        <td>
-          {% if a.status == 'Booked' %}
-            <span class="badge bg-primary">{{ a.status }}</span>
-          {% elif a.status == 'Completed' %}
-            <span class="badge bg-success">{{ a.status }}</span>
-          {% else %}
-            <span class="badge bg-secondary">{{ a.status }}</span>
-          {% endif %}
-        </td>
-        <td>
-          <!-- History -->
-          <a class="btn btn-sm btn-outline-info me-2"
-             href="{{ url_for('doctor_view_patient_history', patient_id=a.patient_id) }}">History</a>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h6 class="fw-bold text-uppercase text-secondary small mb-0">My Patients</h6>
+</div>
 
-          <!-- Complete: only when currently Booked -->
-          {% if a.status == 'Booked' %}
-            <a class="btn btn-sm btn-success me-2" href="{{ url_for('doctor_complete_appointment', appointment_id=a.id) }}">Complete</a>
-          {% else %}
-            <button class="btn btn-sm btn-success me-2" disabled>Complete</button>
-          {% endif %}
-
-          <!-- Edit: available when Completed -->
-          {% if a.status == 'Completed' %}
-            <a class="btn btn-sm btn-outline-primary me-2" href="{{ url_for('doctor_complete_appointment', appointment_id=a.id) }}">Edit</a>
-          {% endif %}
-
-          <!-- Cancel: only when currently Booked -->
-          <form method="post" action="{{ url_for('doctor_cancel_appointment', appointment_id=a.id) }}" style="display:inline-block" onsubmit="return confirm('Cancel this appointment?');">
-            {% if a.status == 'Booked' %}
-              <button class="btn btn-sm btn-warning" type="submit">Cancel</button>
-            {% else %}
-              <button class="btn btn-sm btn-warning" type="button" disabled>Cancel</button>
-            {% endif %}
-          </form>
-        </td>
-      </tr>
+<div class="border rounded overflow-hidden">
+  <div class="list-group list-group-flush">
+    {% if patients %}
+      {% for p in patients %}
+        <a href="{{ url_for('doctor_view_patient_history', patient_id=p.patient_id) }}" class="list-group-item list-group-item-action p-3 d-flex justify-content-between align-items-center">
+          <div>
+            <span class="fw-bold text-dark">{{ p.full_name }}</span>
+            <span class="text-muted small ms-2">{{ p.phone or '' }}</span>
+          </div>
+          <small class="text-primary fw-bold">View Record &rarr;</small>
+        </a>
+      {% endfor %}
     {% else %}
-      <tr><td colspan="6" class="text-muted">No appointments found.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
-
+      <div class="p-4 text-center text-muted small">No patients assigned yet.</div>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}

@@ -246,7 +246,14 @@ def admin_dashboard():
     db = get_db()
     total_doctors = db.execute("SELECT COUNT(*) c FROM doctors").fetchone()["c"]
     total_patients = db.execute("SELECT COUNT(*) c FROM patients").fetchone()["c"]
-    total_appointments = db.execute("SELECT COUNT(*) c FROM appointments").fetchone()["c"]
+    
+    # Total Upcoming
+    total_upcoming = db.execute("""
+        SELECT COUNT(*) c FROM appointments 
+        WHERE datetime(date||' '||time) >= datetime('now') AND status='Booked'
+    """).fetchone()["c"]
+    
+    # Upcoming appointments
     upcoming = db.execute("""
       SELECT a.id, u.full_name patient_name, u2.full_name doctor_name, a.date, a.time, a.status
       FROM appointments a
@@ -257,14 +264,31 @@ def admin_dashboard():
       WHERE datetime(a.date||' '||a.time) >= datetime('now') AND a.status='Booked'
       ORDER BY a.date, a.time LIMIT 10
     """).fetchall()
-    return render_template("admin_dashboard.html", total_doctors=total_doctors,
-                           total_patients=total_patients, total_appointments=total_appointments,
-                           upcoming=upcoming)
+
+    # Past activity
+    past = db.execute("""
+      SELECT a.id, u.full_name patient_name, u2.full_name doctor_name, a.date, a.time, a.status
+      FROM appointments a
+      JOIN patients p ON a.patient_id=p.id
+      JOIN users u ON p.user_id = u.id
+      JOIN doctors d ON a.doctor_id = d.id
+      JOIN users u2 ON d.user_id = u2.id
+      WHERE datetime(a.date||' '||a.time) < datetime('now') OR a.status != 'Booked'
+      ORDER BY a.date DESC, a.time DESC LIMIT 10
+    """).fetchall()
+
+    return render_template("admin_dashboard.html", 
+                           total_doctors=total_doctors,
+                           total_patients=total_patients, 
+                           total_upcoming=total_upcoming,
+                           upcoming=upcoming, past=past)
 
 @app.route("/admin/doctors", methods=["GET","POST"])
 @login_required(role="admin")
 def manage_doctors():
     db = get_db()
+    q = request.args.get("q", "").strip()
+    
     if request.method=="POST":
         username = request.form["username"].strip()
         full_name = request.form["full_name"].strip()
@@ -291,12 +315,21 @@ def manage_doctors():
             flash("Doctor added.", "success")
         except sqlite3.IntegrityError:
             flash("Username exists.", "danger")
-    doctors = db.execute("""
+    
+    query = """
       SELECT d.id, u.full_name, u.username, u.email, u.phone, dep.name department, d.experience
       FROM doctors d JOIN users u ON d.user_id = u.id LEFT JOIN departments dep ON d.department_id=dep.id
-      ORDER BY u.full_name
-    """).fetchall()
-    return render_template("admin_doctors.html", doctors=doctors)
+    """
+    params = []
+    if q:
+        query += " WHERE u.full_name LIKE ? OR u.username LIKE ? OR u.email LIKE ?"
+        like = f"%{q}%"
+        params = [like, like, like]
+    
+    query += " ORDER BY u.full_name"
+    
+    doctors = db.execute(query, params).fetchall()
+    return render_template("admin_doctors.html", doctors=doctors, q=q)
 
 @app.route("/admin/doctors/<int:doctor_id>/edit", methods=["GET","POST"])
 @login_required(role="admin")
@@ -392,6 +425,21 @@ def admin_view_patient(patient_id):
     """,(patient_id,)).fetchall()
     return render_template("admin_view_patient.html", patient=patient, appointments=appointments, treatments=treatments)
 
+@app.route("/admin/users/<int:user_id>/deactivate", methods=["POST"])
+@login_required(role="admin")
+def admin_deactivate_user(user_id):
+    db = get_db()
+    user = db.execute("SELECT is_active FROM users WHERE id=?", (user_id,)).fetchone()
+    if user:
+        new_status = 0 if user["is_active"] else 1
+        db.execute("UPDATE users SET is_active=? WHERE id=?", (new_status, user_id))
+        db.commit()
+        status_text = "activated" if new_status else "deactivated"
+        flash(f"User {status_text}.", "success")
+    else:
+        flash("User not found.", "danger")
+    return redirect(request.referrer or url_for("admin_dashboard"))
+
 @app.route("/admin/departments", methods=["GET","POST"])
 @login_required(role="admin")
 def admin_departments():
@@ -407,19 +455,75 @@ def admin_departments():
         except sqlite3.IntegrityError:
             flash("Already exists.", "danger")
         return redirect(url_for("admin_departments"))
-    depts=db.execute("SELECT id,name,description FROM departments ORDER BY name").fetchall()
+    
+    # CHANGED: Count doctors in each department
+    depts = db.execute("""
+        SELECT dep.id, dep.name, dep.description, COUNT(d.id) as doctor_count
+        FROM departments dep
+        LEFT JOIN doctors d ON dep.id = d.department_id
+        GROUP BY dep.id
+        ORDER BY dep.name
+    """).fetchall()
+    
     return render_template("admin_departments.html", depts=depts)
+
+@app.route("/admin/departments/<int:dept_id>/edit", methods=["GET", "POST"])
+@login_required(role="admin")
+def admin_edit_department(dept_id):
+    db = get_db()
+    dept = db.execute("SELECT * FROM departments WHERE id=?", (dept_id,)).fetchone()
+    if not dept:
+        flash("Department not found.", "danger")
+        return redirect(url_for("admin_departments"))
+    
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        description = request.form.get("description", "").strip()
+        if not name:
+            flash("Name required.", "warning")
+        else:
+            try:
+                db.execute("UPDATE departments SET name=?, description=? WHERE id=?", (name, description, dept_id))
+                db.commit()
+                flash("Department updated.", "success")
+                return redirect(url_for("admin_departments"))
+            except sqlite3.IntegrityError:
+                flash("Department name already exists.", "danger")
+                
+    return render_template("admin_edit_department.html", dept=dept)
 
 @app.route("/admin/appointments")
 @login_required(role="admin")
 def admin_appointments():
-    db=get_db()
-    rows=db.execute("""
-      SELECT a.id,a.date,a.time,a.end_time,a.status,u_p.full_name patient_name,u_p.phone patient_phone,u_d.full_name doctor_name,dep.name department
-      FROM appointments a JOIN patients p ON a.patient_id=p.id JOIN users u_p ON p.user_id=u_p.id JOIN doctors d ON a.doctor_id=d.id JOIN users u_d ON d.user_id=u_d.id LEFT JOIN departments dep ON d.department_id=dep.id
-      ORDER BY a.date DESC, a.time DESC LIMIT 1000
-    """).fetchall()
-    return render_template("admin_appointments.html", rows=rows)
+    db = get_db()
+    filter_type = request.args.get("filter", "all")
+    
+    query = """
+      SELECT a.id, a.date, a.time, a.end_time, a.status,
+             u_p.full_name patient_name, u_p.phone patient_phone,
+             u_d.full_name doctor_name, dep.name department
+      FROM appointments a
+      JOIN patients p ON a.patient_id=p.id
+      JOIN users u_p ON p.user_id=u_p.id
+      JOIN doctors d ON a.doctor_id=d.id
+      JOIN users u_d ON d.user_id=u_d.id
+      LEFT JOIN departments dep ON d.department_id=dep.id
+    """
+    
+    params = []
+    if filter_type == 'upcoming':
+        query += " WHERE datetime(a.date||' '||a.time) >= datetime('now') AND a.status='Booked'"
+        query += " ORDER BY a.date ASC, a.time ASC"
+    elif filter_type == 'past':
+        query += " WHERE datetime(a.date||' '||a.time) < datetime('now') OR a.status != 'Booked'"
+        query += " ORDER BY a.date DESC, a.time DESC"
+    else:
+        query += " ORDER BY a.date DESC, a.time DESC"
+        
+    query += " LIMIT 1000"
+    
+    rows = db.execute(query, params).fetchall()
+    return render_template("admin_appointments.html", rows=rows, filter_type=filter_type)
 
 # -------- Doctor routes ----------
 
@@ -460,7 +564,7 @@ def doctor_view_patient_history(patient_id):
         LEFT JOIN treatments t ON t.appointment_id = a.id
         LEFT JOIN doctors d ON a.doctor_id = d.id
         LEFT JOIN users u ON d.user_id = u.id
-        WHERE a.patient_id = ? AND a.status != 'Cancelled'
+        WHERE a.patient_id = ? AND a.status = 'Completed'
         ORDER BY a.date DESC, a.time DESC
     """, (patient_id,)).fetchall()
 
@@ -479,19 +583,28 @@ def doctor_dashboard():
         flash("Doctor profile not found.", "danger")
         return redirect(url_for("logout"))
 
-    # show upcoming and recent appointments (limit 200)
-    appointments = db.execute("""
+    # Active (Actionable: Booked)
+    active_appts = db.execute("""
         SELECT a.id, a.date, a.time, a.end_time, a.status,
-               p.id AS patient_id, u.full_name AS patient_name
+               p.id AS patient_id, u.full_name AS patient_name, u.phone AS patient_phone
+        FROM appointments a
+        JOIN patients p ON a.patient_id = p.id
+        JOIN users u ON p.user_id = u.id
+        WHERE a.doctor_id = ? AND a.status = 'Booked'
+        ORDER BY a.date ASC, a.time ASC
+    """, (doctor["id"],)).fetchall()
+
+    # Patients (for the "My Patients" section)
+    patients = db.execute("""
+        SELECT DISTINCT p.id AS patient_id, u.full_name, u.phone, u.email
         FROM appointments a
         JOIN patients p ON a.patient_id = p.id
         JOIN users u ON p.user_id = u.id
         WHERE a.doctor_id = ?
-        ORDER BY datetime(a.date || ' ' || a.time) DESC
-        LIMIT 200
+        ORDER BY u.full_name
     """, (doctor["id"],)).fetchall()
 
-    return render_template("doctor_dashboard.html", appointments=appointments)
+    return render_template("doctor_dashboard.html", active_appts=active_appts, patients=patients)
 
 @app.route("/doctor/appointments/<int:appointment_id>/complete", methods=["GET", "POST"])
 @login_required(role="doctor")
@@ -917,7 +1030,7 @@ def patient_dashboard():
     
     # Past
     past = db.execute("""
-            SELECT a.id,a.date,a.time,a.end_time,a.status,u.full_name AS doctor_name,t.diagnosis,t.prescription
+            SELECT a.id,a.date,a.time,a.end_time,a.status,u.full_name AS doctor_name,t.diagnosis,t.prescription,t.notes
             FROM appointments a JOIN doctors d ON a.doctor_id=d.id JOIN users u ON d.user_id=u.id LEFT JOIN treatments t ON t.appointment_id=a.id
             WHERE a.patient_id=? AND (datetime(a.date||' '||a.time) < datetime('now') OR a.status = 'Completed')
             ORDER BY a.date DESC, a.time DESC
@@ -925,6 +1038,13 @@ def patient_dashboard():
     
     # Departments (for "Browse by Specialization")
     departments = db.execute("SELECT name FROM departments ORDER BY name").fetchall()
+
+    # Available Doctors (Top 4 for Preview)
+    doctors = db.execute("""
+      SELECT d.id,u.full_name, dep.name AS department
+      FROM doctors d JOIN users u ON d.user_id=u.id LEFT JOIN departments dep ON d.department_id=dep.id 
+      ORDER BY dep.name, u.full_name LIMIT 4
+    """).fetchall()
 
     # --- Search Logic ---
     q = request.args.get("q", "").strip()
@@ -938,7 +1058,7 @@ def patient_dashboard():
           ORDER BY u.full_name
         """, (like, like, like)).fetchall()
     
-    return render_template("patient_dashboard.html", upcoming=upcoming, past=past, departments=departments, search_results=search_results, q=q)
+    return render_template("patient_dashboard.html", upcoming=upcoming, past=past, departments=departments, doctors=doctors, search_results=search_results, q=q)
 
 @app.route("/patient/doctor/<int:doctor_id>/availability")
 @login_required(role="patient")

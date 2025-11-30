@@ -1,38 +1,76 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h2>Patient history: {{ patient.full_name }}</h2>
-
-<div class="card mb-3 p-3">
-  <p><strong>Phone:</strong> {{ patient.phone or '-' }} &nbsp; <strong>Email:</strong> {{ patient.email or '-' }}</p>
-  <p><strong>Blood group:</strong> {{ patient.blood_group or '-' }} &nbsp; <strong>Address:</strong> {{ patient.address or '-' }}</p>
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="fw-bold mb-1">Patient History</h2>
+    <p class="text-muted mb-0">Medical records for {{ patient.full_name }}</p>
+  </div>
+  <div>
+    <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+  </div>
 </div>
 
-<h4>Appointments & Treatments</h4>
-<table class="table table-sm">
-  <thead><tr><th>Date</th><th>Time</th><th>Status</th><th>Diagnosis</th><th>Prescription</th><th>Notes</th><th>Action</th></tr></thead>
-  <tbody>
-    {% for r in records %}
-      <tr>
-        <td>{{ r.date }}</td>
-        <td>{{ r.time }}</td>
-        <td>{{ r.status }}</td>
-        <td>{{ r.diagnosis or '-' }}</td>
-        <td>{{ r.prescription or '-' }}</td>
-        <td>{{ r.notes or '-' }}</td>
-        <td>
-          {% if r.doctor_id == current_doctor_id %}
-            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('doctor_complete_appointment', appointment_id=r.appt_id) }}">Edit</a>
-          {% else %}
-            <span class="text-muted">-</span>
-          {% endif %}
-        </td>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-<div class="text-end">
-  <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
-  
+<div class="card mb-4 border-0 shadow-sm bg-light">
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-6">
+        <p class="mb-1"><strong>Email:</strong> {{ patient.email or '—' }}</p>
+        <p class="mb-0"><strong>Phone:</strong> {{ patient.phone or '—' }}</p>
+      </div>
+      <div class="col-md-6 text-md-end">
+        <p class="mb-1"><strong>Blood Group:</strong> {{ patient.blood_group or '—' }}</p>
+        <p class="mb-0"><strong>Address:</strong> {{ patient.address or '—' }}</p>
+      </div>
+    </div>
+  </div>
 </div>
+
+{% if records %}
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-4">Date</th>
+            <th>Status</th>
+            <th>Diagnosis</th>
+            <th>Prescription</th>
+            <th>Notes</th>
+            <th class="text-end pe-4">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in records %}
+            <tr>
+              <td class="ps-4" style="white-space: nowrap;">
+                <div class="fw-bold">{{ r.date }}</div>
+                <div class="small text-muted">{{ r.time }}</div>
+              </td>
+              <td>
+                <span class="badge bg-light text-dark border">{{ r.status }}</span>
+              </td>
+              <td>{{ r.diagnosis or '—' }}</td>
+              <td>{{ r.prescription or '—' }}</td>
+              <td>{{ r.notes or '—' }}</td>
+              <td class="text-end pe-4">
+                {% if r.doctor_id == current_doctor_id %}
+                  <a href="{{ url_for('doctor_complete_appointment', appointment_id=r.appt_id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                {% else %}
+                  <span class="text-muted small">View Only</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% else %}
+  <div class="text-center py-5 text-muted border rounded bg-white">
+    <h5 class="fw-bold">No history found</h5>
+    <p class="mb-0">There are no completed appointments or treatments recorded for this patient.</p>
+  </div>
+{% endif %}
+
 {% endblock %}

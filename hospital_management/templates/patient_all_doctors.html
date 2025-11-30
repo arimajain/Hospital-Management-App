@@ -2,20 +2,14 @@
 
 {% block content %}
 <style>
-    /* Reusing Card Polish */
+    /* Minimal Card Style */
     .card {
-        border: none;
+        border: 1px solid #e9ecef;
         border-radius: 12px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-        transition: transform 0.2s, box-shadow 0.2s;
-        overflow: hidden;
+        box-shadow: none; /* Flat design */
     }
-    .card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-    }
-
-    /* Doctor Avatar Placeholder */
+    
+    /* Simple Avatar */
     .doc-avatar {
         width: 48px;
         height: 48px;
@@ -57,12 +51,12 @@
               </div>
             </div>
             <p class="card-text small text-muted">
-                Available for consultation. Check slots to book an appointment.
+                Available for consultation.
             </p>
           </div>
           <div class="card-footer bg-white border-0 pt-0 pb-3 d-flex gap-2">
               <a class="btn btn-outline-secondary btn-sm flex-fill" href="{{ url_for('patient_view_doctor_profile', doctor_id=doc.id) }}">Profile</a>
-              <a class="btn btn-dark btn-sm flex-fill" href="{{ url_for('patient_view_doctor_availability', doctor_id=doc.id) }}">View Slots</a>
+              <a class="btn btn-dark btn-sm flex-fill" href="{{ url_for('patient_view_doctor_availability', doctor_id=doc.id) }}">Slots</a>
           </div>
         </div>
       </div>

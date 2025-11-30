@@ -48,6 +48,21 @@
     .status-booked { background-color: #e3f2fd; color: #0d47a1; }
     .status-completed { background-color: #e8f5e9; color: #1b5e20; }
     .status-cancelled { background-color: #ffebee; color: #b71c1c; }
+    
+    /* Simple Avatar */
+    .doc-avatar {
+        width: 48px;
+        height: 48px;
+        background: #e9ecef;
+        color: #495057;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin-right: 1rem;
+    }
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -69,16 +84,13 @@
         </div>
     </form>
 
-    <div class="d-flex flex-wrap gap-2 align-items-center">
+    <div class="d-flex flex-wrap gap-2 align-items-center mb-4">
         <span class="text-muted small fw-bold text-uppercase me-2">Browse by Specialization:</span>
         {% for dept in departments %}
             <a href="{{ url_for('patient_dashboard', q=dept.name) }}" class="btn btn-sm btn-outline-secondary rounded-pill">
                 {{ dept.name }}
             </a>
         {% endfor %}
-        <div class="ms-auto">
-            <a href="{{ url_for('patient_all_doctors') }}" class="text-decoration-none small">View all doctors &rarr;</a>
-        </div>
     </div>
 
     {% if q %}
@@ -105,6 +117,44 @@
       </div>
     {% endif %}
 </div>
+
+<section class="mb-5">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="dashboard-section-title mb-0">Available Doctors</h4>
+      <a href="{{ url_for('patient_all_doctors') }}" class="text-decoration-none small">View full list &rarr;</a>
+  </div>
+  
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
+    {% if doctors %}
+      {% for doc in doctors %}
+        <div class="col">
+          <div class="card h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center mb-3">
+                <div class="doc-avatar">
+                    {{ doc.full_name[:1] }}
+                </div>
+                <div>
+                    <h5 class="card-title mb-0 fw-bold">{{ doc.full_name }}</h5>
+                    <small class="text-primary fw-semibold">{{ doc.department or 'General' }}</small>
+                </div>
+              </div>
+              <p class="card-text small text-muted">
+                  Available for consultation.
+              </p>
+            </div>
+            <div class="card-footer bg-white border-0 pt-0 pb-3 d-flex gap-2">
+                <a class="btn btn-outline-secondary btn-sm flex-fill" href="{{ url_for('patient_view_doctor_profile', doctor_id=doc.id) }}">Profile</a>
+                <a class="btn btn-dark btn-sm flex-fill" href="{{ url_for('patient_view_doctor_availability', doctor_id=doc.id) }}">Slots</a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="col-12 text-muted">No doctors available.</div>
+    {% endif %}
+  </div>
+</section>
 
 <section class="mb-5">
   <h4 class="dashboard-section-title">Upcoming Appointments</h4>
@@ -165,10 +215,11 @@
                 </span>
               </div>
               
-              {% if a.diagnosis or a.prescription %}
+              {% if a.diagnosis or a.prescription or a.notes %}
                 <div class="bg-light p-2 rounded small text-muted">
                     {% if a.diagnosis %}<div><strong>Diagnosis:</strong> {{ a.diagnosis }}</div>{% endif %}
                     {% if a.prescription %}<div><strong>Prescription:</strong> {{ a.prescription }}</div>{% endif %}
+                    {% if a.notes %}<div><strong>Notes:</strong> {{ a.notes }}</div>{% endif %}
                 </div>
               {% endif %}
             </div>

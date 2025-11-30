@@ -1,15 +1,21 @@
 {% extends "base.html" %}
-{% block content %}
-<h2>My availability</h2>
 
-<div class="card mb-4 p-3">
-  <h5>Set Availability for Next 7 Days</h5>
-  <p class="text-muted">Choose which days you're available, pick start/end times, and select a slot length. The system will create discrete booking slots of the chosen length inside each day's range.</p>
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold mb-0">My Availability</h2>
+  <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-outline-secondary btn-sm">Back</a>
+</div>
+
+<div class="card mb-5 p-4 border rounded shadow-none">
+  <h5 class="fw-bold mb-3">Set Availability for Next 7 Days</h5>
+  <p class="text-muted small mb-4">
+    Choose your available days, set hours, and pick a slot duration. The system will generate booking slots automatically.
+  </p>
 
   <form method="post" action="{{ url_for('doctor_availability') }}">
-    <div class="row align-items-end mb-3">
-      <div class="col-md-3">
-        <label class="form-label">Slot length</label>
+    <div class="row mb-4">
+      <div class="col-md-4">
+        <label class="form-label fw-bold small text-uppercase text-muted">Slot Duration</label>
         <select name="slot_length" class="form-select">
           <option value="5">5 min</option>
           <option value="10">10 min</option>
@@ -17,71 +23,88 @@
           <option value="30">30 min</option>
         </select>
       </div>
-      <div class="col-md-9 text-end">
-        <button class="btn btn-primary">Save Availability</button>
-      </div>
     </div>
 
-    <table class="table table-borderless">
-      <thead>
-        <tr>
-          <th style="width:15%">Date</th>
-          <th style="width:20%">Day</th>
-          <th style="width:10%">Available</th>
-          <th style="width:25%">Start time</th>
-          <th style="width:25%">End time</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for d in days %}
+    <div class="table-responsive mb-4">
+      <table class="table align-middle">
+        <thead class="table-light">
           <tr>
-            <td>{{ d.iso }}</td>
-            <td>{{ d.label }}</td>
-            <td>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="enable_{{ d.iso }}" name="enable_{{ d.iso }}" {% if d.enabled %}checked{% endif %}>
-              </div>
-            </td>
-            <td>
-              <select name="start_{{ d.iso }}" class="form-select">
-                {% for t in time_slots %}
-                  <option value="{{ t }}" {% if t==d.start_time %}selected{% endif %}>{{ t }}</option>
-                {% endfor %}
-              </select>
-            </td>
-            <td>
-              <select name="end_{{ d.iso }}" class="form-select">
-                {% for t in time_slots %}
-                  <option value="{{ t }}" {% if t==d.end_time %}selected{% endif %}>{{ t }}</option>
-                {% endfor %}
-              </select>
-            </td>
+            <th style="width:15%">Date</th>
+            <th style="width:15%">Day</th>
+            <th style="width:10%" class="text-center">Active</th>
+            <th style="width:30%">Start Time</th>
+            <th style="width:30%">End Time</th>
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {% for d in days %}
+            <tr>
+              <td class="fw-bold text-dark">{{ d.iso }}</td>
+              <td class="text-muted">{{ d.label }}</td>
+              <td class="text-center">
+                <div class="form-check d-inline-block">
+                  <input class="form-check-input" type="checkbox" id="enable_{{ d.iso }}" name="enable_{{ d.iso }}" {% if d.enabled %}checked{% endif %}>
+                </div>
+              </td>
+              <td>
+                <select name="start_{{ d.iso }}" class="form-select form-select-sm">
+                  {% for t in time_slots %}
+                    <option value="{{ t }}" {% if t==d.start_time %}selected{% endif %}>{{ t }}</option>
+                  {% endfor %}
+                </select>
+              </td>
+              <td>
+                <select name="end_{{ d.iso }}" class="form-select form-select-sm">
+                  {% for t in time_slots %}
+                    <option value="{{ t }}" {% if t==d.end_time %}selected{% endif %}>{{ t }}</option>
+                  {% endfor %}
+                </select>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
 
     <div class="text-end">
-      <button class="btn btn-primary">Save Availability</button>
+      <button class="btn btn-primary px-4">Save Availability</button>
     </div>
   </form>
 </div>
 
-<h4>Existing upcoming slots (summary)</h4>
-<p class="text-muted">Individual slots created from your ranges are listed below; patients will be able to book any unbooked slot.</p>
-
-<table class="table table-sm">
-  <thead><tr><th>Date</th><th>Start</th><th>End</th><th>Total slots</th><th>Booked</th></tr></thead>
-  <tbody>
-    {% for d in days %}
+<h5 class="fw-bold mb-3">Slot Summary</h5>
+<div class="card border rounded overflow-hidden">
+  <table class="table mb-0">
+    <thead class="table-light">
       <tr>
-        <td>{{ d.iso }}</td>
-        <td>{{ d.start_time }}</td>
-        <td>{{ d.end_time }}</td>
-        <td>{{ slots_summary[d.iso].total if d.iso in slots_summary else 0 }}</td>
-        <td>{{ slots_summary[d.iso].booked if d.iso in slots_summary else 0 }}</td>
+        <th class="ps-4">Date</th>
+        <th>Hours</th>
+        <th>Total Slots</th>
+        <th>Booked</th>
       </tr>
-    {% endfor %}
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      {% for d in days %}
+        <tr>
+          <td class="ps-4 fw-bold">{{ d.iso }}</td>
+          <td class="text-muted">
+            {% if d.enabled %}
+              {{ d.start_time }} - {{ d.end_time }}
+            {% else %}
+              <span class="badge bg-light text-muted border">Unavailable</span>
+            {% endif %}
+          </td>
+          <td>{{ slots_summary[d.iso].total if d.iso in slots_summary else 0 }}</td>
+          <td>
+            {% if d.iso in slots_summary and slots_summary[d.iso].booked > 0 %}
+                <span class="badge bg-primary bg-opacity-10 text-primary">{{ slots_summary[d.iso].booked }}</span>
+            {% else %}
+                <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 {% endblock %}
