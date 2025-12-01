@@ -11,7 +11,6 @@
         background: white;
     }
     
-    /* Large Avatar */
     .doc-avatar-large {
         width: 100px;
         height: 100px;
@@ -25,7 +24,6 @@
         font-size: 2.5rem;
     }
     
-    /* Department Badge */
     .dept-badge {
         background-color: #e3f2fd;
         color: #0d47a1;
@@ -36,7 +34,6 @@
         display: inline-block;
     }
     
-    /* Stat Label */
     .stat-label {
         font-size: 0.75rem;
         text-transform: uppercase;
@@ -84,6 +81,7 @@
                         <a href="{{ url_for('patient_view_doctor_availability', doctor_id=doctor.id) }}" class="btn btn-primary btn-lg px-5 py-3 shadow-sm rounded-pill fw-bold">
                             Book Appointment
                         </a>
+                        <div class="mt-2 small text-muted">Check available slots</div>
                     </div>
                 </div>
 
@@ -91,11 +89,6 @@
 
                 <div class="row g-5">
                     <div class="col-md-8">
-                        <h5 class="fw-bold mb-3 text-dark">About</h5>
-                        <p class="text-muted lh-lg mb-4">
-                            {{ doctor.bio or "Dr. " ~ doctor.full_name ~ " is a dedicated specialist committed to providing excellent patient care. With a focus on " ~ (doctor.department or 'general medicine') ~ ", they ensure comprehensive treatment plans tailored to individual needs." }}
-                        </p>
-
                         <div class="row g-4 mt-2">
                             <div class="col-6 col-md-4">
                                 <div class="p-3 bg-light rounded-3 text-center h-100">
