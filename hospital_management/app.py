@@ -353,6 +353,7 @@ def doctor_dashboard():
 def doctor_availability():
     db = get_db()
     doc_id = db.execute("SELECT id FROM doctors WHERE user_id=?", (session["user_id"],)).fetchone()["id"]
+    
     days = []
     for i in range(7):
         d = date.today() + timedelta(days=i)
@@ -363,18 +364,30 @@ def doctor_availability():
         for d in days:
             iso = d["iso"]
             if request.form.get(f"enable_{iso}"):
+                # 1. Clear unbooked slots for this day to avoid duplicates
                 db.execute("DELETE FROM doctor_availability WHERE doctor_id=? AND date=? AND is_booked=0", (doc_id, iso))
+                
+                # 2. Generate new slots
                 start, end = request.form.get(f"start_{iso}"), request.form.get(f"end_{iso}")
                 curr, limit = time_to_minutes(start), time_to_minutes(end)
+                
                 while curr + slot <= limit:
                     s_str = f"{curr//60:02d}:{curr%60:02d}"
                     e_str = f"{(curr+slot)//60:02d}:{(curr+slot)%60:02d}"
-                    db.execute("INSERT INTO doctor_availability (doctor_id, date, start_time, end_time) VALUES (?,?,?,?)", (doc_id, iso, s_str, e_str))
+                    
+                    # FIX: Use INSERT OR IGNORE to prevent crashes if a booked slot already exists at this time
+                    db.execute("""
+                        INSERT OR IGNORE INTO doctor_availability 
+                        (doctor_id, date, start_time, end_time, is_booked) 
+                        VALUES (?, ?, ?, ?, 0)
+                    """, (doc_id, iso, s_str, e_str))
+                    
                     curr += slot
         db.commit()
-        flash("Availability saved.", "success")
+        flash("Availability updated successfully.", "success")
         return redirect(url_for('doctor_availability')) 
 
+    # Load saved state
     slots_summary = {}
     for d in days:
         existing = db.execute("SELECT start_time, end_time, is_booked FROM doctor_availability WHERE doctor_id=? AND date=? ORDER BY start_time", (doc_id, d["iso"])).fetchall()
@@ -391,7 +404,6 @@ def doctor_availability():
             d["end_time"] = "17:00"
 
     return render_template("doctor_availability.html", days=days, time_slots=generate_time_slots(), slots_summary=slots_summary)
-
 @app.route("/doctor/complete/<int:appointment_id>", methods=["GET", "POST"])
 @login_required(role="doctor")
 def doctor_complete_appointment(appointment_id):
