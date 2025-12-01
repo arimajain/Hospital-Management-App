@@ -68,7 +68,9 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
   <div>
     <h2 class="fw-bold mb-1">Hello, {{ session.get('full_name').split()[0] }}</h2>
-    <p class="text-muted mb-0">Your Health Dashboard</p>
+    <div class="text-muted">
+        Patient ID: <span class="fw-bold text-dark">P{{ "%02d" | format(patient.id) }}</span>
+    </div>
   </div>
   <div>
     <a class="btn btn-outline-secondary" href="{{ url_for('patient_profile') }}">Edit Profile</a>

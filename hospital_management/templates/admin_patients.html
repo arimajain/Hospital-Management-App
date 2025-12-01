@@ -1,26 +1,68 @@
 {% extends "base.html" %}
-{% block content %}
-<h2>Patients</h2>
-<form class="row mb-3" method="get" action="{{ url_for('admin_list_patients') }}">
-  <div class="col-auto"><input class="form-control" name="q" placeholder="Search patients" value="{{ q }}"></div>
-  <div class="col-auto"><button class="btn btn-outline-primary">Search</button></div>
-</form>
-<table class="table">
-  <thead><tr><th>#</th><th>Username</th><th>Full name</th><th>Email</th><th>Phone</th><th>Active</th><th>Actions</th></tr></thead>
-  <tbody>
-    {% for p in patients %}
-      <tr><td>{{ p.id }}</td><td>{{ p.username }}</td><td>{{ p.full_name }}</td><td>{{ p.email }}</td><td>{{ p.phone }}</td><td>{{ 'Yes' if p.is_active else 'No' }}</td>
-        <td>
-          <a class="btn btn-sm btn-primary" href="{{ url_for('admin_view_patient', patient_id=p.id) }}">View</a>
-          <form method="post" action="{{ url_for('admin_deactivate_user', user_id=p.user_id) }}" style="display:inline">
-            <button class="btn btn-sm btn-warning">{{ 'Deactivate' if p.is_active else 'Activate' }}</button>
-          </form>
-        </td>
-      </tr>
-    {% else %}
-      <tr><td colspan="7" class="text-center">No patients found</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
-{% endblock %}
 
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold mb-0 text-dark">Patients</h2>
+  <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin_dashboard') }}">Back</a>
+</div>
+
+<div class="card border shadow-none mb-4">
+  <div class="card-body bg-light">
+    <form class="row g-2" method="get" action="{{ url_for('admin_list_patients') }}">
+      <div class="col-md-10">
+        <input class="form-control" name="q" placeholder="Search by name, username, email or phone" value="{{ q }}">
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-primary w-100">Search</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="border rounded overflow-hidden">
+  <table class="table mb-0 align-middle">
+    <thead class="bg-light">
+      <tr>
+        <th class="ps-4 py-3 text-uppercase text-muted small fw-bold border-bottom" style="width: 120px; white-space: nowrap;">Patient ID</th>
+        <th class="py-3 text-uppercase text-muted small fw-bold border-bottom">Full Name</th>
+        <th class="py-3 text-uppercase text-muted small fw-bold border-bottom">Username</th>
+        <th class="py-3 text-uppercase text-muted small fw-bold border-bottom">Contact</th>
+        <th class="py-3 text-uppercase text-muted small fw-bold border-bottom text-center">Status</th>
+        <th class="py-3 text-uppercase text-muted small fw-bold border-bottom text-end pe-4">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in patients %}
+        <tr>
+          <td class="ps-4 text-muted fw-bold">P{{ "%02d" | format(p.id) }}</td>
+          <td class="fw-bold text-dark">{{ p.full_name }}</td>
+          <td class="text-muted small">{{ p.username }}</td>
+          <td>
+             <div class="small">{{ p.email }}</div>
+             <div class="small text-muted">{{ p.phone }}</div>
+          </td>
+          <td class="text-center">
+            {% if p.is_active %}
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill">Active</span>
+            {% else %}
+                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 rounded-pill">Inactive</span>
+            {% endif %}
+          </td>
+          <td class="text-end pe-4">
+            <a class="btn btn-sm btn-outline-primary me-1" href="{{ url_for('admin_view_patient', patient_id=p.id) }}">View</a>
+            <form method="post" action="{{ url_for('admin_deactivate_user', user_id=p.user_id) }}" style="display:inline">
+                {% if p.is_active %}
+                    <button class="btn btn-sm btn-outline-danger">Deactivate</button>
+                {% else %}
+                    <button class="btn btn-sm btn-outline-success">Activate</button>
+                {% endif %}
+            </form>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6" class="text-center py-5 text-muted">No patients found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

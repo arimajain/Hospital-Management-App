@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="text-center py-5">
+  <div class="mb-4" style="font-size: 3rem;">✅</div>
+  <h2 class="fw-bold text-success">Booking Successful!</h2>
+  <p class="text-muted">Your appointment has been confirmed.</p>
+
+  <div class="card d-inline-block p-4 shadow-none border mt-3 bg-light">
+      <h5 class="text-muted text-uppercase small fw-bold mb-1">Appointment ID</h5>
+      <div class="display-6 fw-bold text-dark">A{{ "%02d" | format(appt_id) }}</div>
+  </div>
+
+  <div class="mt-5">
+      <a href="{{ url_for('patient_dashboard') }}" class="btn btn-primary px-4">Go to Dashboard</a>
+  </div>
+</div>
+{% endblock %}

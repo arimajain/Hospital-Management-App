@@ -3,7 +3,30 @@
 {% block content %}
 <div class="mb-5">
   <h2 class="fw-bold mb-1">Hello, Dr. {{ session.get('full_name').split()[2] }}</h2>
-  <p class="text-muted small mb-0">Today's Schedule & Overview</p>
+  <div class="text-muted small">
+      Doctor ID: <span class="fw-bold text-dark">D{{ "%02d" | format(doctor.id) }}</span>
+  </div>
+</div>
+
+<div class="row g-3 mb-5">
+  <div class="col-md-4">
+    <div class="border rounded p-3 bg-white h-100 d-flex flex-column justify-content-between">
+      <h6 class="text-uppercase text-muted fw-bold small mb-2">My Patients</h6>
+      <div class="fs-2 fw-bold text-dark">{{ total_patients }}</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="border rounded p-3 bg-white h-100 d-flex flex-column justify-content-between">
+      <h6 class="text-uppercase text-muted fw-bold small mb-2">Appointments Today</h6>
+      <div class="fs-2 fw-bold text-dark">{{ today_count }}</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="border rounded p-3 bg-white h-100 d-flex flex-column justify-content-between">
+      <h6 class="text-uppercase text-muted fw-bold small mb-2">Upcoming Appointments</h6>
+      <div class="fs-2 fw-bold text-dark">{{ active_count }}</div>
+    </div>
+  </div>
 </div>
 
 <div class="mb-5">
@@ -26,6 +49,7 @@
       {% for a in active_appts %}
         <div class="list-group-item p-3 d-flex justify-content-between align-items-center">
           <div>
+            <div class="small text-muted mb-1 fw-bold">APPT ID: A{{ "%02d" | format(a.id) }}</div>
             <div class="fw-bold text-dark mb-1">{{ a.patient_name }}</div>
             <div class="small text-muted">{{ a.date }} at {{ a.time }}</div>
           </div>
@@ -66,3 +90,6 @@
   </div>
 </div>
 {% endblock %}
+
+
+

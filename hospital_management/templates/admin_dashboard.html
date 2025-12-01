@@ -58,15 +58,18 @@
   <table class="table mb-0">
     <thead class="bg-light">
       <tr>
+        <th class="ps-4 py-3 text-uppercase text-muted small fw-bold border-bottom" style="width:100px;">Appt ID</th>
         <th class="ps-4 py-3 text-uppercase text-muted small fw-bold border-bottom">Date & Time</th>
         <th class="py-3 text-uppercase text-muted small fw-bold border-bottom">Doctor</th>
         <th class="py-3 text-uppercase text-muted small fw-bold border-bottom">Patient</th>
         <th class="py-3 text-uppercase text-muted small fw-bold border-bottom">Status</th>
+        <th class="py-3 text-uppercase text-muted small fw-bold border-bottom text-end pe-4">Action</th>
       </tr>
     </thead>
     <tbody>
       {% for a in upcoming %}
         <tr>
+          <td class="ps-4 py-3 align-middle fw-bold text-secondary">A{{ "%02d" | format(a.id) }}</td>
           <td class="ps-4 py-3 align-middle">
             <div class="fw-bold text-dark">{{ a.date }}</div>
             <small class="text-muted">{{ a.time }}</small>
@@ -74,16 +77,17 @@
           <td class="align-middle">{{ a.doctor_name }}</td>
           <td class="align-middle">{{ a.patient_name }}</td>
           <td class="align-middle">
-            {% if a.status == 'Booked' %}
-              <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 rounded-pill fw-normal">Booked</span>
-            {% else %}
-              <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2 py-1 rounded-pill fw-normal">{{ a.status }}</span>
-            {% endif %}
+            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 rounded-pill fw-normal">Booked</span>
+          </td>
+          <td class="align-middle text-end pe-4">
+            <form method="post" action="{{ url_for('admin_cancel_appointment', appointment_id=a.id) }}" onsubmit="return confirm('Cancel this appointment?');">
+                <button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size: 0.75rem;">Cancel</button>
+            </form>
           </td>
         </tr>
       {% else %}
         <tr>
-          <td colspan="4" class="text-center py-4 text-muted small">No upcoming bookings.</td>
+          <td colspan="5" class="text-center py-4 text-muted small">No upcoming bookings.</td>
         </tr>
       {% endfor %}
     </tbody>
@@ -99,6 +103,7 @@
   <table class="table mb-0">
     <thead class="bg-light">
       <tr>
+        <th class="ps-4 py-3 text-uppercase text-muted small fw-bold border-bottom" style="width:100px;">Appt ID</th>
         <th class="ps-4 py-3 text-uppercase text-muted small fw-bold border-bottom">Date & Time</th>
         <th class="py-3 text-uppercase text-muted small fw-bold border-bottom">Doctor</th>
         <th class="py-3 text-uppercase text-muted small fw-bold border-bottom">Patient</th>
@@ -108,6 +113,7 @@
     <tbody>
       {% for a in past %}
         <tr>
+          <td class="ps-4 py-3 align-middle fw-bold text-secondary">A{{ "%02d" | format(a.id) }}</td>
           <td class="ps-4 py-3 align-middle">
             <div class="fw-bold text-dark">{{ a.date }}</div>
             <small class="text-muted">{{ a.time }}</small>

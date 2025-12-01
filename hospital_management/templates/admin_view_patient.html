@@ -1,35 +1,82 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Patient: {{ patient.full_name }}</h2>
-<p><strong>Username:</strong> {{ patient.username }}</p>
-<p><strong>Email:</strong> {{ patient.email }}</p>
-<p><strong>Phone:</strong> {{ patient.phone }}</p>
-<p><strong>Address:</strong> {{ patient.address or '-' }}</p>
-<p><strong>Blood group:</strong> {{ patient.blood_group or '-' }}</p>
-<p><strong>Emergency contact:</strong> {{ patient.emergency_contact or '-' }}</p>
+<div class="d-flex justify-content-between align-items-start mb-4">
+  <div>
+    <h2 class="mb-1">Patient: {{ patient.full_name }}</h2>
+    <p class="text-muted mb-0">Username: {{ patient.username }}</p>
+  </div>
+  <a href="{{ url_for('admin_list_patients') }}" class="btn btn-outline-secondary btn-sm">Back</a>
+</div>
 
-<h4 class="mt-4">Appointments</h4>
-<table class="table">
-  <thead><tr><th>#</th><th>Date</th><th>Time</th><th>Doctor</th><th>Status</th></tr></thead>
-  <tbody>
-    {% for a in appointments %}
-      <tr><td>{{ a.id }}</td><td>{{ a.date }}</td><td>{{ a.time }}</td><td>{{ a.doctor_name }}</td><td>{{ a.status }}</td></tr>
-    {% else %}
-      <tr><td colspan="5" class="text-center">No appointments</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+<div class="card mb-4 border-0 shadow-sm bg-light">
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-4">
+        <p class="mb-1"><strong>Email:</strong> {{ patient.email }}</p>
+        <p class="mb-1"><strong>Phone:</strong> {{ patient.phone }}</p>
+      </div>
+      <div class="col-md-4">
+        <p class="mb-1"><strong>Age:</strong> {{ patient.age or '-' }}</p>
+        <p class="mb-1"><strong>Blood group:</strong> {{ patient.blood_group or '-' }}</p>
+      </div>
+      <div class="col-md-4">
+        <p class="mb-1"><strong>Address:</strong> {{ patient.address or '-' }}</p>
+        <p class="mb-1"><strong>Emergency:</strong> {{ patient.emergency_contact or '-' }}</p>
+      </div>
+    </div>
+  </div>
+</div>
 
-<h4 class="mt-4">Treatments</h4>
-<table class="table">
-  <thead><tr><th>#</th><th>Date</th><th>Doctor</th><th>Diagnosis</th><th>Prescription</th></tr></thead>
-  <tbody>
-    {% for t in treatments %}
-      <tr><td>{{ t.id }}</td><td>{{ t.appt_date }} {{ t.appt_time }}</td><td>{{ t.doctor_name }}</td><td>{{ t.diagnosis or '-' }}</td><td>{{ t.prescription or '-' }}</td></tr>
-    {% else %}
-      <tr><td colspan="5" class="text-center">No treatments</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+<h4 class="mb-3">Appointment History</h4>
+<div class="card border-0 shadow-none">
+  <table class="table table-hover mb-0">
+    <thead class="table-light">
+      <tr>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Doctor</th>
+        <th>Status</th>
+        <th>Diagnosis/Rx</th>
+        <th class="text-end">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in appointments %}
+        <tr>
+          <td>{{ a.date }}</td>
+          <td>{{ a.time }}</td>
+          <td>{{ a.doctor_name }}</td>
+          <td>
+             {% if a.status == 'Booked' %}
+               <span class="badge bg-primary bg-opacity-10 text-primary">Booked</span>
+             {% elif a.status == 'Completed' %}
+               <span class="badge bg-success bg-opacity-10 text-success">Completed</span>
+             {% else %}
+               <span class="badge bg-secondary bg-opacity-10 text-secondary">Cancelled</span>
+             {% endif %}
+          </td>
+          <td class="small text-muted">
+             {% if a.diagnosis or a.prescription %}
+               <div><strong>Dx:</strong> {{ a.diagnosis }}</div>
+               <div><strong>Rx:</strong> {{ a.prescription }}</div>
+             {% else %}
+               -
+             {% endif %}
+          </td>
+          <td class="text-end">
+             {% if a.status == 'Booked' %}
+               <form method="post" action="{{ url_for('admin_cancel_appointment', appointment_id=a.id) }}" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
+                 <button class="btn btn-sm btn-outline-danger">Cancel</button>
+               </form>
+             {% else %}
+               <button class="btn btn-sm btn-light text-muted" disabled>-</button>
+             {% endif %}
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">No records found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 {% endblock %}
-

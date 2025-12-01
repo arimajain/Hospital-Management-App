@@ -7,20 +7,26 @@
     <p class="text-muted mb-0">Medical records for {{ patient.full_name }}</p>
   </div>
   <div>
-    <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+    <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-outline-secondary">Back</a>
   </div>
 </div>
 
 <div class="card mb-4 border-0 shadow-sm bg-light">
   <div class="card-body">
     <div class="row">
-      <div class="col-md-6">
+      <div class="col-md-4">
+        <p class="mb-1"><strong>Patient ID:</strong> P{{ "%02d" | format(patient.patient_id) }}</p>
+        <p class="mb-0"><strong>Full Name:</strong> {{ patient.full_name }}</p>
+      </div>
+      
+      <div class="col-md-4">
         <p class="mb-1"><strong>Email:</strong> {{ patient.email or '—' }}</p>
         <p class="mb-0"><strong>Phone:</strong> {{ patient.phone or '—' }}</p>
       </div>
-      <div class="col-md-6 text-md-end">
-        <p class="mb-1"><strong>Blood Group:</strong> {{ patient.blood_group or '—' }}</p>
-        <p class="mb-0"><strong>Address:</strong> {{ patient.address or '—' }}</p>
+      
+      <div class="col-md-4">
+        <p class="mb-1"><strong>Age:</strong> {{ patient.age or '—' }}</p>
+        <p class="mb-0"><strong>Blood Group:</strong> {{ patient.blood_group or '—' }}</p>
       </div>
     </div>
   </div>
@@ -67,10 +73,7 @@
     </div>
   </div>
 {% else %}
-  <div class="text-center py-5 text-muted border rounded bg-white">
-    <h5 class="fw-bold">No history found</h5>
-    <p class="mb-0">There are no completed appointments or treatments recorded for this patient.</p>
-  </div>
+  <div class="alert alert-info">No past record found for this patient.</div>
 {% endif %}
 
 {% endblock %}

@@ -12,16 +12,22 @@
       <input name="email" class="form-control" value="{{ user.email or '' }}">
     </div>
   </div>
+  
   <div class="row">
-    <div class="mb-3 col-md-6">
+    <div class="mb-3 col-md-4">
       <label class="form-label">Phone</label>
       <input name="phone" class="form-control" value="{{ user.phone or '' }}">
     </div>
-    <div class="mb-3 col-md-6">
+    <div class="mb-3 col-md-4">
+      <label class="form-label">Age</label>
+      <input name="age" type="number" class="form-control" value="{{ patient.age or '' }}">
+    </div>
+    <div class="mb-3 col-md-4">
       <label class="form-label">Blood group</label>
       <input name="blood_group" class="form-control" value="{{ patient.blood_group or '' }}">
     </div>
   </div>
+
   <div class="mb-3">
     <label class="form-label">Address</label>
     <input name="address" class="form-control" value="{{ patient.address or '' }}">

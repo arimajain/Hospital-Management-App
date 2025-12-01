@@ -1,56 +1,104 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Manage Doctors</h2>
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold mb-0 text-dark">Doctors</h2>
+  <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin_dashboard') }}">Back</a>
+</div>
 
-<div class="row mb-3">
-  <div class="col-md-6">
-    <form method="get" action="{{ url_for('manage_doctors') }}" class="input-group">
-      <input type="text" name="q" class="form-control" placeholder="Search doctors..." value="{{ q }}">
-      <button class="btn btn-outline-secondary">Search</button>
+<div class="row g-2 mb-4">
+  <div class="col-md-8">
+    <form method="get" action="{{ url_for('manage_doctors') }}">
+      <div class="input-group">
+        <input type="text" name="q" class="form-control" placeholder="Search doctors..." value="{{ q }}">
+        <button class="btn btn-outline-secondary">Search</button>
+      </div>
     </form>
   </div>
-  <div class="col-md-6 text-end">
-    <button class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#addForm">Add Doctor</button>
+  <div class="col-md-4 text-end">
+    <button class="btn btn-primary w-100" data-bs-toggle="collapse" data-bs-target="#addForm">Add New Doctor</button>
   </div>
 </div>
 
 <div id="addForm" class="collapse mb-4">
-  <div class="card card-body">
-    <form method="post" action="{{ url_for('manage_doctors') }}">
-      <div class="row">
-        <div class="mb-3 col-md-4"><label class="form-label">Username</label><input name="username" class="form-control" required></div>
-        <div class="mb-3 col-md-4"><label class="form-label">Full name</label><input name="full_name" class="form-control" required></div>
-        <div class="mb-3 col-md-4"><label class="form-label">Email</label><input name="email" type="email" class="form-control"></div>
-      </div>
-      <div class="row">
-        <div class="mb-3 col-md-4"><label class="form-label">Phone</label><input name="phone" class="form-control"></div>
-        <div class="mb-3 col-md-4"><label class="form-label">Password</label><input name="password" type="password" class="form-control" required></div>
-        <div class="mb-3 col-md-4"><label class="form-label">Department</label><input name="department" class="form-control" required></div>
-      </div>
-      <div class="mb-3"><label class="form-label">Experience</label><input name="experience" class="form-control" placeholder="e.g., 5 years, Cardiology"></div>
-      <button class="btn btn-success">Create doctor</button>
-    </form>
+  <div class="card border shadow-none">
+    <div class="card-body bg-light">
+      <h6 class="fw-bold text-uppercase text-muted small mb-3">New Doctor Details</h6>
+      <form method="post" action="{{ url_for('manage_doctors') }}">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label small fw-bold">Full Name</label>
+            <input name="full_name" class="form-control" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small fw-bold">Username</label>
+            <input name="username" class="form-control" required>
+          </div>
+          <div class="col-md-4">
+             <label class="form-label small fw-bold">Password</label>
+             <input name="password" type="password" class="form-control" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small fw-bold">Email</label>
+            <input name="email" type="email" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small fw-bold">Phone</label>
+            <input name="phone" class="form-control">
+          </div>
+          <div class="col-md-4">
+             <label class="form-label small fw-bold">Department</label>
+             <input name="department" class="form-control" required>
+          </div>
+          <div class="col-12">
+             <label class="form-label small fw-bold">Experience</label>
+             <input name="experience" class="form-control" placeholder="e.g., 5 years">
+          </div>
+          <div class="col-12 text-end">
+            <button class="btn btn-success px-4">Create Doctor</button>
+          </div>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
 
-<table class="table table-hover">
-  <thead><tr><th>Name</th><th>Username</th><th>Email</th><th>Phone</th><th>Department</th><th>Experience</th><th>Actions</th></tr></thead>
-  <tbody>
-    {% for d in doctors %}
+<div class="border rounded overflow-hidden">
+  <table class="table mb-0 align-middle">
+    <thead class="bg-light">
       <tr>
-        <td>{{ d.full_name }}</td><td>{{ d.username }}</td><td>{{ d.email }}</td><td>{{ d.phone }}</td><td>{{ d.department or '-' }}</td><td>{{ d.experience or '-' }}</td>
-        <td>
-          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_view_doctor', doctor_id=d.id) }}">View</a>
-          <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin_edit_doctor', doctor_id=d.id) }}">Edit</a>
-          <form method="post" action="{{ url_for('admin_delete_doctor', doctor_id=d.id) }}" style="display:inline" onsubmit="return confirm('Remove doctor?')">
-            <button class="btn btn-sm btn-danger">Remove</button>
-          </form>
-        </td>
+        <th class="ps-4 py-3 text-uppercase text-muted small fw-bold border-bottom" style="width: 120px; white-space: nowrap;">Doctor ID</th>
+        <th class="py-3 text-uppercase text-muted small fw-bold border-bottom">Doctor Details</th>
+        <th class="py-3 text-uppercase text-muted small fw-bold border-bottom">Contact</th>
+        <th class="py-3 text-uppercase text-muted small fw-bold border-bottom">Experience</th>
+        <th class="py-3 text-uppercase text-muted small fw-bold border-bottom text-end pe-4">Actions</th>
       </tr>
-    {% else %}
-      <tr><td colspan="7" class="text-center">No doctors found</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      {% for d in doctors %}
+        <tr>
+          <td class="ps-4 text-muted fw-bold">D{{ "%02d" | format(d.id) }}</td>
+          <td>
+            <div class="fw-bold text-dark">{{ d.full_name }}</div>
+            <div class="small text-muted">{{ d.department or 'General' }}</div>
+          </td>
+          <td>
+             <div class="small">{{ d.email }}</div>
+             <div class="small text-muted">{{ d.phone }}</div>
+          </td>
+          <td class="text-muted small">{{ d.experience or '-' }}</td>
+          <td class="text-end pe-4">
+            <a class="btn btn-sm btn-outline-primary me-1" href="{{ url_for('admin_view_doctor', doctor_id=d.id) }}">View</a>
+            <a class="btn btn-sm btn-outline-secondary me-1" href="{{ url_for('admin_edit_doctor', doctor_id=d.id) }}">Edit</a>
+            <form method="post" action="{{ url_for('admin_delete_doctor', doctor_id=d.id) }}" style="display:inline" onsubmit="return confirm('Remove this doctor? This cannot be undone.')">
+              <button class="btn btn-sm btn-outline-danger">Remove</button>
+            </form>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5" class="text-center py-5 text-muted">No doctors found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 {% endblock %}

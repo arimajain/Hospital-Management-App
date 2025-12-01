@@ -21,18 +21,21 @@
   <table class="table mb-0">
     <thead class="bg-light">
       <tr>
-        <th class="ps-4 py-3 text-uppercase text-muted small fw-bold border-bottom">Date</th>
+        <th class="ps-4 py-3 text-uppercase text-muted small fw-bold border-bottom" style="width: 100px;">Appt ID</th>
+        <th class="py-3 text-uppercase text-muted small fw-bold border-bottom">Date</th>
         <th class="py-3 text-uppercase text-muted small fw-bold border-bottom">Time</th>
         <th class="py-3 text-uppercase text-muted small fw-bold border-bottom">Doctor</th>
         <th class="py-3 text-uppercase text-muted small fw-bold border-bottom">Patient</th>
         <th class="py-3 text-uppercase text-muted small fw-bold border-bottom">Department</th>
         <th class="py-3 text-uppercase text-muted small fw-bold border-bottom">Status</th>
+        <th class="py-3 text-uppercase text-muted small fw-bold border-bottom text-end pe-4">Action</th>
       </tr>
     </thead>
     <tbody>
       {% for r in rows %}
         <tr>
-          <td class="ps-4 align-middle fw-bold text-dark">{{ r.date }}</td>
+          <td class="ps-4 align-middle fw-bold text-secondary">A{{ "%02d" | format(r.id) }}</td>
+          <td class="align-middle fw-bold text-dark">{{ r.date }}</td>
           <td class="align-middle text-muted">{{ r.time }}</td>
           <td class="align-middle">{{ r.doctor_name }}</td>
           <td class="align-middle">
@@ -44,15 +47,25 @@
             {% if r.status == 'Completed' %}
                 <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill fw-normal">Completed</span>
             {% elif r.status == 'Cancelled' %}
+            {% elif r.status == 'Cancelled' %}
                 <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1 rounded-pill fw-normal">Cancelled</span>
             {% else %}
                 <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 rounded-pill fw-normal">Booked</span>
             {% endif %}
           </td>
+          <td class="align-middle text-end pe-4">
+             {% if r.status == 'Booked' %}
+               <form method="post" action="{{ url_for('admin_cancel_appointment', appointment_id=r.id) }}" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
+                 <button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size: 0.75rem;">Cancel</button>
+               </form>
+             {% else %}
+               <span class="text-muted small">-</span>
+             {% endif %}
+          </td>
         </tr>
       {% else %}
         <tr>
-          <td colspan="6" class="text-center py-5 text-muted">No appointments found.</td>
+          <td colspan="8" class="text-center py-5 text-muted">No appointments found.</td>
         </tr>
       {% endfor %}
     </tbody>
